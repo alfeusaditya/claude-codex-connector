@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# install.sh — set up Claude Code -> Codex image generation (macOS / Linux).
+# install.sh — set up Claude Code <-> Codex skills: image, review, opinion (macOS / Linux).
 #
 #   bash install.sh              install (asks before changing anything outside the skill folder)
 #   bash install.sh --yes        answer yes to every question
 #   bash install.sh --check      change nothing, only report what is ready / missing
-#   bash install.sh --uninstall  remove the skill (keeps Codex, your login and your images)
+#   bash install.sh --uninstall  remove the 3 skills (keeps Codex, your login and your images)
 #
 # Never uses sudo. Never changes Claude/Codex settings files.
 set -euo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
-SKILL_SRC="$HERE/skills/codex-image"
-SKILL_DST="$HOME/.claude/skills/codex-image"
+SKILLS="codex-image codex-review codex-opinion"
+SKILLS_DIR="$HOME/.claude/skills"
 OUT_DIR=${CODEX_IMAGE_DIR:-$HOME/codex-images}
 NPM_PREFIX="$HOME/.npm-global"
 
@@ -35,14 +35,16 @@ ask() { # ask "question" -> 0 if yes
 
 # ---- uninstall -------------------------------------------------------------
 if [ "$UNINSTALL" = 1 ]; then
-  if [ -d "$SKILL_DST" ]; then rm -rf "$SKILL_DST"; ok "removed $SKILL_DST"; else info "skill not installed"; fi
+  for s in $SKILLS; do
+    if [ -d "$SKILLS_DIR/$s" ]; then rm -rf "${SKILLS_DIR:?}/$s"; ok "removed $SKILLS_DIR/$s"; else info "$s not installed"; fi
+  done
   info "kept: Codex CLI, your Codex login, $OUT_DIR"
   info "full removal: see docs/UNINSTALL.md"
   exit 0
 fi
 
 PROBLEMS=0
-echo "Claude Code -> Codex image generation"
+echo "Claude-Codex Connector"
 
 # ---- 1. Node ---------------------------------------------------------------
 if command -v node >/dev/null 2>&1 && [ "$(node -p 'process.versions.node.split(".")[0]')" -ge 18 ]; then
@@ -92,23 +94,35 @@ if [ -n "$CODEX" ]; then
   fi
 fi
 
-# ---- 4. Skill + output folder ---------------------------------------------
+# ---- 4. Skills + output folder --------------------------------------------
 if [ "$CHECK" = 1 ]; then
-  [ -f "$SKILL_DST/SKILL.md" ] && ok "skill installed at $SKILL_DST" || { miss "skill not installed"; PROBLEMS=1; }
-  [ -d "$OUT_DIR" ] && ok "output folder $OUT_DIR" || info "output folder will be created on first use"
+  for s in $SKILLS; do
+    [ -f "$SKILLS_DIR/$s/SKILL.md" ] && ok "skill $s installed" || { miss "skill $s not installed"; PROBLEMS=1; }
+  done
+  [ -d "$OUT_DIR" ] && ok "image folder $OUT_DIR" || info "image folder will be created on first use"
 else
-  mkdir -p "$HOME/.claude/skills" "$OUT_DIR"
-  if [ -e "$SKILL_DST" ] && ! diff -rq "$SKILL_SRC" "$SKILL_DST" >/dev/null 2>&1; then
-    mv "$SKILL_DST" "$SKILL_DST.before-$(date +%Y%m%d%H%M%S)"; info "existing skill moved aside (backup kept)"
-  fi
-  rm -rf "$SKILL_DST"; cp -R "$SKILL_SRC" "$SKILL_DST"; chmod +x "$SKILL_DST/scripts/codex-image.sh"
-  ok "skill installed at $SKILL_DST"
-  ok "output folder $OUT_DIR"
+  mkdir -p "$SKILLS_DIR" "$OUT_DIR"
+  for s in $SKILLS; do
+    src="$HERE/skills/$s"; dst="$SKILLS_DIR/$s"
+    # review/opinion share one script; copy it in so each skill folder is self-contained
+    stage=$(mktemp -d); cp -R "$src/." "$stage/"
+    case $s in codex-review|codex-opinion) mkdir -p "$stage/scripts"; cp "$HERE/shared/codex-ask.sh" "$stage/scripts/";; esac
+    if [ -e "$dst" ] && ! diff -rq "$stage" "$dst" >/dev/null 2>&1; then
+      mv "$dst" "$dst.before-$(date +%Y%m%d%H%M%S)"; info "existing $s moved aside (backup kept in $SKILLS_DIR)"
+    fi
+    rm -rf "$dst"; cp -R "$stage" "$dst"; rm -rf "$stage"
+    [ -d "$dst/scripts" ] && chmod +x "$dst"/scripts/*.sh
+    ok "skill $s installed"
+  done
+  ok "image folder $OUT_DIR"
 fi
 
 echo
 if [ "$PROBLEMS" = 0 ]; then
-  echo "Ready. Restart Claude Code (or start a new session), then ask: \"generate an image of a red apple\"."
+  echo "Ready. Restart Claude Code (or start a new session), then try:"
+  echo "  - generate an image of a red apple        (codex-image)"
+  echo "  - ask codex to review my uncommitted diff (codex-review)"
+  echo "  - get a second opinion from codex on X    (codex-opinion)"
   echo "Read docs/SECURITY.md before sharing prompts or files."
 else
   echo "Not ready yet: fix the [FAIL] lines above, then run this again."; exit 1

@@ -6,7 +6,7 @@
 bash install.sh --uninstall
 ```
 
-Menghapus `~/.claude/skills/codex-image`. Codex, login, dan gambarmu tetap ada.
+Menghapus tiga skill di `~/.claude/skills/` (`codex-image`, `codex-review`, `codex-opinion`). Codex, login, dan gambarmu tetap ada.
 
 ## Hapus semuanya (manual, pilih yang perlu)
 

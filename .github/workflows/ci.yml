@@ -14,9 +14,9 @@ jobs:
         with:
           node-version: 20
       - name: Syntax check
-        run: bash -n install.sh skills/codex-image/scripts/codex-image.sh tests/test.sh
+        run: bash -n install.sh shared/codex-ask.sh skills/codex-image/scripts/codex-image.sh tests/test.sh
       - name: Offline tests (fake codex)
         run: bash tests/test.sh
       - name: ShellCheck
         if: runner.os == 'Linux'
-        run: shellcheck install.sh skills/codex-image/scripts/codex-image.sh tests/test.sh || true
+        run: shellcheck install.sh shared/codex-ask.sh skills/codex-image/scripts/codex-image.sh tests/test.sh || true

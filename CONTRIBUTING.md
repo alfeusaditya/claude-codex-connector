@@ -1,10 +1,10 @@
 # Berkontribusi
 
-Terima kasih. Repo ini sengaja **kecil dan sempit** (Codex, gambar, satu folder). Pull request yang memperluas cakupan perlu alasan kuat.
+Terima kasih. Repo ini sengaja **kecil dan sempit** (Codex, tiga tugas: gambar, review, opini). Pull request yang memperluas cakupan perlu alasan kuat.
 
 ## Aturan
 
-1. **Tidak ada pelonggaran keamanan.** Tidak boleh menambah `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `--full-auto`, `sudo`, hook global, atau perubahan ke settings Claude/Codex.
+1. **Tidak ada pelonggaran keamanan.** `codex-review` dan `codex-opinion` harus tetap `--sandbox read-only`. Tidak boleh menambah `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `--full-auto`, `sudo`, hook global, atau perubahan ke settings Claude/Codex.
 2. **Tanpa dependensi baru.** Bash + Node/npm yang sudah ada.
 3. Installer harus tetap: bertanya sebelum mengubah sesuatu, bisa diulang (idempotent), punya `--check` dan `--uninstall`, dan membuat backup sebelum mengubah file milik pengguna.
 4. Perubahan perilaku wajib punya tes di `tests/test.sh` dan dokumentasi yang diperbarui.
@@ -14,10 +14,10 @@ Terima kasih. Repo ini sengaja **kecil dan sempit** (Codex, gambar, satu folder)
 ## Alur
 
 ```bash
-git clone https://github.com/alfeusaditya-cyber/claude-codex-image.git
-cd claude-codex-image
+git clone https://github.com/alfeusaditya-cyber/claude-codex-connector.git
+cd claude-codex-connector
 bash tests/test.sh      # harus ALL PASSED
-bash -n install.sh skills/codex-image/scripts/codex-image.sh
+bash -n install.sh shared/codex-ask.sh skills/codex-image/scripts/codex-image.sh
 ```
 
 Jika punya `shellcheck`, jalankan juga. CI menjalankan semuanya.

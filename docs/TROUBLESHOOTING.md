@@ -39,10 +39,22 @@ Baca `~/codex-images/.last-error.log`. Penyebab umum:
 - prompt ditolak kebijakan konten: ubah prompt, jangan cari jalan memutar
 - Codex versi lama: `npm i -g @openai/codex@latest`
 
+## Review/opini: kode keluar 6 (rahasia terdeteksi)
+
+Tidak ada yang dikirim. Hapus rahasia dari diff/file, atau (hanya jika yakin itu palsu/uji) jalankan dengan `--allow-secrets`. Repo ini sendiri memuat string uji palsu di `tests/test.sh`, jadi me-review repo ini memerlukan `--allow-secrets`.
+
+## Review: kode keluar 7 (tidak ada diff)
+
+Tidak ada perubahan terhadap `HEAD`. Cek branch, pakai `--base main`, atau jalankan `git add -N <file>` untuk file baru.
+
+## Review/opini: kode keluar 8 (terlalu besar)
+
+Batas 300 KB. Review per direktori/commit, lampirkan file lebih sedikit, atau naikkan `CODEX_ASK_MAX_BYTES` (ingat: makin besar, makin banyak kuota dan data terkirim).
+
 ## Claude tidak memakai skill
 
 - Mulai **sesi baru** setelah instalasi.
-- Pastikan ada `~/.claude/skills/codex-image/SKILL.md`.
+- Pastikan ada `~/.claude/skills/codex-image/SKILL.md` (dan `codex-review`, `codex-opinion`).
 - Sebut jelas: "buat gambar ... pakai codex".
 
 ## `timeout: command not found` (macOS)

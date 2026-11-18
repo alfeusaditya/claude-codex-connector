@@ -2,6 +2,17 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/); versi mengikuti [SemVer](https://semver.org/).
 
+## [1.1.0] - 2026-11-18
+
+### Added
+- Skill `codex-review`: review `git diff` oleh Codex (read-only, ephemeral).
+- Skill `codex-opinion`: opini independen Codex (read-only, folder sementara).
+- `shared/codex-ask.sh` dengan pemindai rahasia, batas ukuran, dan pengecualian file sensitif.
+- Installer memasang tiga skill; tes dan docs diperbarui.
+
+### Changed
+- Proyek berganti nama menjadi **Claude-Codex Connector** (repo `claude-codex-connector`).
+
 ## [1.0.0] - 2026-11-18
 
 ### Added

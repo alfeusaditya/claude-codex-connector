@@ -8,7 +8,7 @@ Ini proyek hobi tanpa SLA; laporan ditanggapi sebisanya.
 
 ## Cakupan
 
-Dalam cakupan: `install.sh`, `skills/codex-image/` (skrip dan instruksi skill), alur yang memungkinkan penulisan di luar `~/codex-images` atau eksekusi tak terduga.
+Dalam cakupan: `install.sh`, `skills/*` dan `shared/codex-ask.sh` (skrip dan instruksi skill), termasuk celah pada pemindai rahasia, alur yang memungkinkan penulisan di luar `~/codex-images` atau eksekusi tak terduga.
 
 Di luar cakupan: celah di Codex CLI, Claude Code, atau layanan OpenAI/Anthropic (laporkan ke mereka).
 
