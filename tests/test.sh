@@ -5,6 +5,7 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SCRIPT="$ROOT/skills/codex-image/scripts/codex-image.sh"
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 mkdir "$T/bin"; export HOME="$T/home"; mkdir -p "$HOME"
+unset CODEX_BIN CODEX_PLAN CODEX_IMAGE_DIR   # never let the caller's env reach the real Codex
 NODE_DIR=$(dirname "$(command -v node)")
 export PATH="$T/bin:$NODE_DIR:/usr/bin:/bin:/usr/sbin:/sbin"
 export CODEX_IMAGE_DIR="$T/out" FAKE_LOG="$T/fake"
@@ -102,6 +103,31 @@ grep -q "CODEX_PLAN=go" "$XDG_CONFIG_HOME/claude-codex-connector/config" || { ec
 t "installer bad plan"        2 bash "$ROOT/install.sh" --plan gold
 bash "$ROOT/install.sh" --uninstall >/dev/null; [ ! -e "$XDG_CONFIG_HOME/claude-codex-connector/config" ] || { echo "FAIL config left"; fail=1; }
 unset XDG_CONFIG_HOME
+# --- review-driven fixes ---
+printf 'q via stdin' | bash "$ASK" opinion - > "$T/o" 2>"$T/e" && grep -q "q via stdin" "$T/fake.stdin" && echo "PASS opinion stdin (-)" || { echo "FAIL opinion stdin"; cat "$T/e"; fail=1; }
+t "base: leading hyphen rejected" 2 bash "$ASK" review -C "$R" --base "--output=$T/pwned" --allow-secrets
+[ ! -e "$T/pwned...HEAD" ] && [ -z "$(ls "$T" | grep pwned)" ] || { echo "FAIL --base option injection wrote a file"; fail=1; }
+t "base: bad ref"             2 bash "$ASK" review -C "$R" --base no-such-ref --allow-secrets
+# nested sensitive files must be excluded at any depth
+N="$T/nested"; mkdir "$N"; git -C "$N" init -q; git -C "$N" config user.email a@b.c; git -C "$N" config user.name t
+mkdir -p "$N/sub/deep"; echo base > "$N/a.txt"; echo one > "$N/sub/deep/.env"; echo one > "$N/id_rsa"; git -C "$N" add -A; git -C "$N" commit -q -m i
+echo two >> "$N/a.txt"; echo two >> "$N/sub/deep/.env"; echo two >> "$N/id_rsa"
+t "nested .env excluded"      0 bash "$ASK" review -C "$N"
+grep -q "sub/deep/.env\|id_rsa" "$T/fake.stdin" && { echo "FAIL nested sensitive file was sent"; fail=1; }
+grep -q "a.txt" "$T/fake.stdin" || { echo "FAIL normal file missing"; fail=1; }
+# unborn branch: staged initial change is reviewable
+U="$T/unborn"; mkdir "$U"; git -C "$U" init -q; echo hi > "$U/f.txt"; git -C "$U" add f.txt
+t "unborn branch review"      0 bash "$ASK" review -C "$U"
+grep -q "+hi" "$T/fake.stdin" || { echo "FAIL unborn staged diff"; fail=1; }
+# unquoted env-style secrets are caught
+t "unquoted secret blocked"   6 bash "$ASK" opinion "export API_TOKEN=abcd1234efgh5678"
+# image script now reports model/plan
+bash "$SCRIPT" --model terra "x" rep 2>&1 >/dev/null | grep -q "model=gpt-6.1-terra plan=paid" && echo "PASS image reports model" || { echo "FAIL image model line"; fail=1; }
+# uninstall keeps a copy (never deletes local edits)
+bash "$ROOT/install.sh" --yes >/dev/null; echo "# my edit" >> "$HOME/.claude/skills/codex-opinion/SKILL.md"; bash "$ROOT/install.sh" --uninstall >/dev/null
+grep -rq "my edit" "$HOME/.claude/skill-backups" && echo "PASS uninstall keeps copy" || { echo "FAIL uninstall lost local edit"; fail=1; }
+bash "$ROOT/install.sh" --yes >/dev/null; OUT2=$(bash "$ROOT/install.sh" --yes); case $OUT2 in *"already up to date"*) echo "PASS reinstall idempotent";; *) echo "FAIL reinstall not idempotent"; fail=1;; esac
+bash "$ROOT/install.sh" --uninstall >/dev/null   # leave a clean HOME for the checks below
 t "install --check runs"     1 bash "$ROOT/install.sh" --check   # skill not installed in fake HOME -> not ready
 t "install + check + uninstall" 0 bash -c "bash '$ROOT/install.sh' --yes && bash '$ROOT/install.sh' --check && bash '$ROOT/install.sh' --uninstall"
 for k in codex-image codex-review codex-opinion; do [ ! -e "$HOME/.claude/skills/$k" ] || { echo "FAIL uninstall left $k"; fail=1; }; done

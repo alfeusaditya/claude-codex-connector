@@ -18,7 +18,7 @@ Thanks. This repo is deliberately **small and narrow** (Codex, three tasks: imag
 git clone https://github.com/alfeusaditya/claude-codex-connector.git
 cd claude-codex-connector
 bash tests/test.sh      # must print ALL PASSED
-bash -n install.sh shared/codex-ask.sh skills/codex-image/scripts/codex-image.sh
+for f in install.sh shared/codex-ask.sh skills/codex-image/scripts/codex-image.sh tests/test.sh; do bash -n "$f"; done
 ```
 
 Run `shellcheck` too if you have it. CI runs all of this.

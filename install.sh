@@ -41,7 +41,8 @@ ask() { # ask "question" -> 0 if yes
 # ---- uninstall -------------------------------------------------------------
 if [ "$UNINSTALL" = 1 ]; then
   for s in $SKILLS; do
-    if [ -d "$SKILLS_DIR/$s" ]; then rm -rf "${SKILLS_DIR:?}/$s"; ok "removed $SKILLS_DIR/$s"; else info "$s not installed"; fi
+    # move (not delete) so local edits to a skill are never lost
+    if [ -d "$SKILLS_DIR/$s" ]; then mkdir -p "$BACKUP_DIR"; mv "$SKILLS_DIR/$s" "$BACKUP_DIR/$s.removed.$(date +%Y%m%d%H%M%S).$$"; ok "removed $s (copy kept in $BACKUP_DIR)"; else info "$s not installed"; fi
   done
   [ -f "$CONF_DIR/config" ] && { rm -f "$CONF_DIR/config"; rmdir "$CONF_DIR" 2>/dev/null || true; ok "removed connector config"; }
   info "kept: Codex CLI, your Codex login, $OUT_DIR"
@@ -74,15 +75,17 @@ if [ -z "$CODEX" ] && [ "$CHECK" = 0 ] && [ "$PROBLEMS" = 0 ]; then
         mkdir -p "$NPM_PREFIX"; npm config set prefix "$NPM_PREFIX"
         RC="$HOME/.zshrc"; case ${SHELL:-} in */bash) RC="$HOME/.bashrc";; esac
         grep -qs '\.npm-global/bin' "$RC" 2>/dev/null || {
-          cp "$RC" "$RC.before-claude-codex-image" 2>/dev/null || true
+          if [ -f "$RC" ]; then cp "$RC" "$RC.before-claude-codex-image"; BK=" (backup: $RC.before-claude-codex-image)"; else BK=" (file did not exist)"; fi
           echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$RC"
-          ok "added PATH line to $RC (backup: $RC.before-claude-codex-image)"; }
+          ok "added PATH line to $RC$BK"; }
         export PATH="$NPM_PREFIX/bin:$PATH"
       else
         miss "cannot install without a writable npm folder. See docs/TROUBLESHOOTING.md"; PROBLEMS=1
       fi
     fi
-    [ "$PROBLEMS" = 0 ] && { npm install -g @openai/codex && CODEX=$(find_codex); }
+    if [ "$PROBLEMS" = 0 ]; then
+      if npm install -g @openai/codex; then CODEX=$(find_codex); else miss "npm install failed (see the npm error above; docs/TROUBLESHOOTING.md)"; PROBLEMS=1; fi
+    fi
   fi
 fi
 if [ -n "$CODEX" ]; then ok "Codex CLI $("$CODEX" --version 2>/dev/null | head -1) ($CODEX)"
@@ -113,11 +116,14 @@ else
     # review/opinion share one script; copy it in so each skill folder is self-contained
     stage=$(mktemp -d); cp -R "$src/." "$stage/"
     case $s in codex-review|codex-opinion) mkdir -p "$stage/scripts"; cp "$HERE/shared/codex-ask.sh" "$stage/scripts/";; esac
-    if [ -e "$dst" ] && ! diff -rq "$stage" "$dst" >/dev/null 2>&1; then
-      # backups live OUTSIDE the skills folder, or Claude would load them as duplicate skills
-      mkdir -p "$BACKUP_DIR"; mv "$dst" "$BACKUP_DIR/$s.$(date +%Y%m%d%H%M%S)"; info "existing $s backed up to $BACKUP_DIR"
+    if [ -e "$dst" ] && diff -rq "$stage" "$dst" >/dev/null 2>&1; then
+      rm -rf "$stage"; ok "skill $s already up to date"; continue   # identical: touch nothing
     fi
-    rm -rf "$dst"; cp -R "$stage" "$dst"; rm -rf "$stage"
+    if [ -e "$dst" ]; then
+      # backups live OUTSIDE the skills folder, or Claude would load them as duplicate skills
+      mkdir -p "$BACKUP_DIR"; mv "$dst" "$BACKUP_DIR/$s.$(date +%Y%m%d%H%M%S).$$"; info "existing $s backed up to $BACKUP_DIR"
+    fi
+    mv "$stage" "$dst"
     [ -d "$dst/scripts" ] && chmod +x "$dst"/scripts/*.sh
     ok "skill $s installed"
   done
@@ -134,7 +140,9 @@ else
   if [ -z "$PLAN_NOW" ]; then
     if [ "$YES" = 0 ] && [ -t 0 ] && ask "Are you on the ChatGPT Free or Go plan (Luna model only)?"; then PLAN_NOW=free; else PLAN_NOW=paid; fi
   fi
-  mkdir -p "$CONF_DIR"; printf 'CODEX_PLAN=%s\n' "$PLAN_NOW" > "$CONF_DIR/config"
+  mkdir -p "$CONF_DIR"
+  # write atomically, and only when the value actually changes
+  if [ "$(get_plan)" != "$PLAN_NOW" ]; then printf 'CODEX_PLAN=%s\n' "$PLAN_NOW" > "$CONF_DIR/config.tmp.$$" && mv "$CONF_DIR/config.tmp.$$" "$CONF_DIR/config"; fi
   ok "plan: $PLAN_NOW (saved in $CONF_DIR/config; change with: bash install.sh --plan free|go|paid)"
 fi
 

@@ -2,6 +2,20 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow [SemVer](https://semver.org/).
 
+## [1.5.1] - 2026-11-18
+
+Fixes from a Codex (Sol) review of this repo, each verified by Claude before fixing.
+
+### Fixed
+- `codex-ask.sh opinion -` (read the question from stdin) was documented but rejected as an unknown option.
+- Sensitive-file exclusions (`.env*`, `id_rsa*`, `*.pem`, ...) only matched the repo root; they now apply at any depth.
+- `--base` starting with `-` was passed to git as an option (could write a file); it is now rejected and resolved with `rev-parse` first.
+- A failing secret scan (grep error) was treated as clean; it now blocks sending. Unquoted `*_TOKEN=...` style secrets are also detected.
+- Reviewing a repo with no commits yet reported "nothing to review"; staged changes are now included.
+- Installer: `--uninstall` moves skills to `~/.claude/skill-backups/` instead of deleting; identical reinstalls change nothing; unique backup names; clear failure message when `npm install` fails; the plan file is written atomically and only on change.
+- `codex-image.sh` now prints `model=... plan=...` as its skill documents.
+- Tests could reach the real Codex through an inherited `CODEX_BIN`; the harness now unsets it. CI and CONTRIBUTING ran `bash -n` on only the first file; they now check each script.
+
 ## [1.5.0] - 2026-11-18
 
 ### Changed

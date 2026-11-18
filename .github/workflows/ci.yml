@@ -14,7 +14,8 @@ jobs:
         with:
           node-version: 20
       - name: Syntax check
-        run: bash -n install.sh shared/codex-ask.sh skills/codex-image/scripts/codex-image.sh tests/test.sh
+        run: |
+          for f in install.sh shared/codex-ask.sh skills/codex-image/scripts/codex-image.sh tests/test.sh; do bash -n "$f"; done
       - name: Offline tests (fake codex)
         run: bash tests/test.sh
       - name: ShellCheck

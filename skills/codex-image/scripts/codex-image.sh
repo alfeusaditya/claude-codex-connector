@@ -70,11 +70,13 @@ Save it as $NAME.png in the current folder. Do nothing else: no other files, no 
 run_codex() { # run_codex [model]
   printf '%s\n' "$REQUEST" | "$CODEX" exec ${1:+-m "$1"} --sandbox workspace-write --skip-git-repo-check - >/dev/null 2>"$OUT_DIR/.last-error.log" || true
 }
+USED=${MODEL:-default}
 run_codex "$MODEL"
 if [ ! -s "$OUT_DIR/$NAME.png" ] && [ -n "$MODEL" ] && [ "$PLAN" = paid ]; then
   echo "codex-image: model $MODEL produced no image; retrying once with your default model" >&2
-  run_codex ""
+  USED=default; run_codex ""
 fi
+echo "codex-image: model=$USED plan=$PLAN" >&2
 
 if [ -s "$OUT_DIR/$NAME.png" ]; then
   rm -f "$OUT_DIR/.last-error.log"
