@@ -2,6 +2,14 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow [SemVer](https://semver.org/).
 
+## [1.4.0] - 2026-11-18
+
+### Added
+- Per-task model selection: `--depth quick|normal|deep` and `--model NAME` on `codex-ask.sh`; skills tell Claude when to use each and to report the model used.
+- Free-plan mode (`bash install.sh --plan free` or `CODEX_PLAN=free`): always uses `gpt-6-luna`.
+- One automatic fallback to the user's default model when a chosen model is rejected (paid plan).
+- Optional `CODEX_IMAGE_MODEL` for `codex-image`.
+
 ## [1.3.0] - 2026-11-18
 
 ### Changed

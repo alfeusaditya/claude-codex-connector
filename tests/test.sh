@@ -14,7 +14,8 @@ cat > "$T/bin/codex" <<'EOF'
 #!/usr/bin/env bash
 case $1 in
   login) [ -z "${FAKE_LOGGED_OUT:-}" ] && { echo "Logged in using ChatGPT"; exit 0; } || exit 1;;
-  exec) p=$(cat); printf '%s\n' "$*" > "$FAKE_LOG.args"; printf '%s' "$p" > "$FAKE_LOG.stdin"
+  exec) [ -n "${FAKE_REJECT_MODEL:-}" ] && case " $* " in *" -m "*) exit 1;; esac
+        p=$(cat); printf '%s\n' "$*" > "$FAKE_LOG.args"; printf '%s' "$p" > "$FAKE_LOG.stdin"
         out=""; prev=""; for a in "$@"; do [ "$prev" = "-o" ] && out=$a; prev=$a; done
         if [ -n "$out" ]; then [ -n "${FAKE_NO_IMAGE:-}" ] || echo "FAKE ANSWER" > "$out"; exit 0; fi
         n=$(printf '%s' "$p" | sed -n 's/.*as \([A-Za-z0-9_-]*\)\.png.*/\1/p' | head -1)
@@ -61,6 +62,37 @@ t "opinion: blocks .env file" 6 bash "$ASK" opinion --file "$T/.env" "x"
 t "opinion: secret in text"  6 bash "$ASK" opinion "password = 'hunter2hunter2'"
 FAKE_LOGGED_OUT=1 t "ask: not logged in" 4 bash "$ASK" opinion "x"
 FAKE_NO_IMAGE=1   t "ask: no answer"     5 bash "$ASK" opinion "x"
+# --- models / plans ---
+export XDG_CONFIG_HOME="$T/cfg"
+t "model: default has no -m"  0 bash "$ASK" opinion "q"
+grep -q -- " -m " "$T/fake.args" && { echo "FAIL default passed -m"; fail=1; }
+t "model: deep"               0 bash "$ASK" opinion --depth deep "q"
+grep -q -- "-m gpt-6.2-sol" "$T/fake.args" || { echo "FAIL deep model"; fail=1; }
+t "model: quick"              0 bash "$ASK" opinion --depth quick "q"
+grep -q -- "-m gpt-6-luna" "$T/fake.args" || { echo "FAIL quick model"; fail=1; }
+t "model: explicit"           0 bash "$ASK" opinion --model gpt-6.1-terra "q"
+grep -q -- "-m gpt-6.1-terra" "$T/fake.args" || { echo "FAIL explicit model"; fail=1; }
+t "model: bad name"           2 bash "$ASK" opinion --model 'x;rm' "q"
+t "model: bad depth"          2 bash "$ASK" opinion --depth max "q"
+CODEX_PLAN=free t "plan free forces luna" 0 bash "$ASK" opinion --depth deep "q"
+grep -q -- "-m gpt-6-luna" "$T/fake.args" && ! grep -q "gpt-6.2" "$T/fake.args" || { echo "FAIL free plan model"; fail=1; }
+t "plan: invalid"             2 env CODEX_PLAN=gold bash "$ASK" opinion "q"
+FAKE_REJECT_MODEL=1 t "model rejected -> falls back" 0 bash "$ASK" opinion --depth deep "q"
+grep -q "FAKE ANSWER" "$T/o" || { echo "FAIL fallback answer"; fail=1; }
+FAKE_REJECT_MODEL=1 CODEX_PLAN=free t "free: no fallback" 5 bash "$ASK" opinion "q"
+CODEX_IMAGE_MODEL=gpt-6.2-sol t "image: model passed" 0 bash "$SCRIPT" "x" m1
+grep -q -- "-m gpt-6.2-sol" "$T/fake.args" || { echo "FAIL image model"; fail=1; }
+CODEX_PLAN=free t "image: free plan luna" 0 bash "$SCRIPT" "x" m2
+grep -q -- "-m gpt-6-luna" "$T/fake.args" || { echo "FAIL image free"; fail=1; }
+mkdir -p "$XDG_CONFIG_HOME/claude-codex-connector"; echo "CODEX_PLAN=free" > "$XDG_CONFIG_HOME/claude-codex-connector/config"
+t "config file: free"         0 bash "$ASK" opinion --depth deep "q"
+grep -q -- "-m gpt-6-luna" "$T/fake.args" || { echo "FAIL config free"; fail=1; }
+rm -rf "$XDG_CONFIG_HOME"
+t "installer --plan free"     0 bash "$ROOT/install.sh" --yes --plan free
+grep -q "CODEX_PLAN=free" "$XDG_CONFIG_HOME/claude-codex-connector/config" || { echo "FAIL plan not saved"; fail=1; }
+t "installer bad plan"        2 bash "$ROOT/install.sh" --plan gold
+bash "$ROOT/install.sh" --uninstall >/dev/null; [ ! -e "$XDG_CONFIG_HOME/claude-codex-connector/config" ] || { echo "FAIL config left"; fail=1; }
+unset XDG_CONFIG_HOME
 t "install --check runs"     1 bash "$ROOT/install.sh" --check   # skill not installed in fake HOME -> not ready
 t "install + check + uninstall" 0 bash -c "bash '$ROOT/install.sh' --yes && bash '$ROOT/install.sh' --check && bash '$ROOT/install.sh' --uninstall"
 for k in codex-image codex-review codex-opinion; do [ ! -e "$HOME/.claude/skills/$k" ] || { echo "FAIL uninstall left $k"; fail=1; }; done

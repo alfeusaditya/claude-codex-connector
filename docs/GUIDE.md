@@ -63,7 +63,7 @@ bash install.sh --yes     # install without questions
 ## Code review (`codex-review`)
 
 ```bash
-codex-ask.sh review [-C DIR] [--base REF] [--allow-secrets] ["review focus"]
+codex-ask.sh review [-C DIR] [--base REF] [--depth D] [--model M] [--allow-secrets] ["review focus"]
 ```
 
 - Default: uncommitted changes (staged + unstaged, against `HEAD`). `--base main` compares `main...HEAD`.
@@ -76,7 +76,7 @@ codex-ask.sh review [-C DIR] [--base REF] [--allow-secrets] ["review focus"]
 ## Second / third opinion (`codex-opinion`)
 
 ```bash
-codex-ask.sh opinion [--file PATH]... [--allow-secrets] "question"
+codex-ask.sh opinion [--file PATH]... [--depth D] [--model M] [--allow-secrets] "question"
 printf '%s' "$QUESTION" | codex-ask.sh opinion -     # long question via stdin
 ```
 
@@ -85,6 +85,31 @@ printf '%s' "$QUESTION" | codex-ask.sh opinion -     # long question via stdin
 - For a "third" opinion, include the two earlier views as Option A and B and ask Codex to judge them.
 
 `codex-ask.sh` exit codes: `0` ok, `2` bad usage, `3` codex missing, `4` not logged in, `5` no answer, `6` secrets detected (nothing sent), `7` no diff, `8` too large.
+
+## Models and plans
+
+Codex has several models. The scripts pick one per task so Claude can match effort to the job.
+
+| Option | Meaning |
+|---|---|
+| `--depth quick` | `gpt-6-luna` (small, cheap) for simple questions and small diffs |
+| `--depth normal` (default) | your own Codex default model (`model` in `~/.codex/config.toml`) |
+| `--depth deep` | `gpt-6.2-sol` for large/risky diffs and high-stakes decisions |
+| `--model NAME` | explicit model; overrides depth |
+
+Defaults can be changed with `CODEX_MODEL_QUICK`, `CODEX_MODEL_DEEP`, `CODEX_MODEL` (used for `normal`). Model names are the slugs from `codex debug models` (for example `gpt-6.1-sol`, `gpt-6.1-terra`, `gpt-6-astra`, `gpt-5.6-luna`). Which ones you may use depends on your plan.
+
+**Free plan.** Free accounts can only use the Luna model. Tell the connector once:
+
+```bash
+bash install.sh --plan free        # saved in ~/.config/claude-codex-connector/config
+```
+
+or set `CODEX_PLAN=free`. With the free plan every call uses `gpt-6-luna`, whatever depth is requested (a notice is printed). Switch back with `bash install.sh --plan paid`. Image generation may not be available on every free plan; if it is not, `codex-image` reports exit code 5.
+
+**Fallback.** If a chosen model is rejected or returns nothing, the script retries once with your default model (paid plan only) and says so on stderr. Every run prints `codex-ask: model=... plan=... depth=...` so you can see what was used.
+
+For `codex-image`, the model only drives the text model that orchestrates the image tool, so it is **not** a quality knob for the picture; it is unset by default (`CODEX_IMAGE_MODEL` to set it).
 
 ## Using the image script directly
 

@@ -30,6 +30,10 @@ Codex is a tool, not the decision-maker. Each skill makes Claude do this **witho
 
 The banner above was made with `codex-image` and passed Claude's check. The two characters are original art, not official Anthropic or OpenAI logos.
 
+## Models and plans
+
+Claude picks a depth per task: `quick` (Luna) for small things, `normal` (your own Codex default), `deep` (`gpt-6.2-sol`) for large or risky work. **Free plan** (Luna only): run `bash install.sh --plan free` once and every call uses Luna. Details in [docs/GUIDE.md](docs/GUIDE.md#models-and-plans).
+
 ## Requirements
 
 | Need | Notes |
@@ -59,7 +63,7 @@ Then **start a new Claude Code session** and try:
 > "Ask Codex to review my uncommitted changes"
 > "Get a second opinion from Codex on this approach: ..."
 
-Installer options: `--yes` (answer yes to everything), `--check` (report only, change nothing), `--uninstall`.
+Installer options: `--yes` (answer yes to everything), `--check` (report only, change nothing), `--plan free|paid`, `--uninstall`.
 
 ## Documentation
 

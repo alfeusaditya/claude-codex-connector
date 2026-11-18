@@ -4,6 +4,7 @@
 #   bash install.sh              install (asks before changing anything outside the skill folder)
 #   bash install.sh --yes        answer yes to every question
 #   bash install.sh --check      change nothing, only report what is ready / missing
+#   bash install.sh --plan free  set your ChatGPT plan (free = Luna model only; default paid)
 #   bash install.sh --uninstall  remove the 3 skills (keeps Codex, your login and your images)
 #
 # Never uses sudo. Never changes Claude/Codex settings files.
@@ -16,11 +17,14 @@ BACKUP_DIR="$HOME/.claude/skill-backups"
 OUT_DIR=${CODEX_IMAGE_DIR:-$HOME/codex-images}
 NPM_PREFIX="$HOME/.npm-global"
 
-YES=0 CHECK=0 UNINSTALL=0
-for a in "$@"; do
+YES=0 CHECK=0 UNINSTALL=0 PLAN_ARG=""
+CONF_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/claude-codex-connector"
+while [ $# -gt 0 ]; do
+  a=$1; shift
   case $a in
+    --plan) [ $# -ge 1 ] || { echo "--plan needs free or paid" >&2; exit 2; }; PLAN_ARG=$1; shift; case $PLAN_ARG in free|paid) ;; *) echo "--plan must be free or paid" >&2; exit 2;; esac;;
     --yes|-y) YES=1;; --check) CHECK=1;; --uninstall) UNINSTALL=1;;
-    -h|--help) sed -n '2,9p' "$0"; exit 0;;
+    -h|--help) sed -n '2,10p' "$0"; exit 0;;
     *) echo "unknown option: $a (see --help)" >&2; exit 2;;
   esac
 done
@@ -39,6 +43,7 @@ if [ "$UNINSTALL" = 1 ]; then
   for s in $SKILLS; do
     if [ -d "$SKILLS_DIR/$s" ]; then rm -rf "${SKILLS_DIR:?}/$s"; ok "removed $SKILLS_DIR/$s"; else info "$s not installed"; fi
   done
+  [ -f "$CONF_DIR/config" ] && { rm -f "$CONF_DIR/config"; rmdir "$CONF_DIR" 2>/dev/null || true; ok "removed connector config"; }
   info "kept: Codex CLI, your Codex login, $OUT_DIR"
   info "full removal: see docs/UNINSTALL.md"
   exit 0
@@ -117,6 +122,20 @@ else
     ok "skill $s installed"
   done
   ok "image folder $OUT_DIR"
+fi
+
+
+# ---- 5. Plan (free = Luna model only) ----------------------------------------
+get_plan() { [ -f "$CONF_DIR/config" ] && sed -n 's/^CODEX_PLAN=//p' "$CONF_DIR/config" | tail -1 || true; }
+if [ "$CHECK" = 1 ]; then
+  info "plan: $(P=${CODEX_PLAN:-$(get_plan)}; echo "${P:-paid (default)}")"
+else
+  PLAN_NOW=${PLAN_ARG:-$(get_plan)}
+  if [ -z "$PLAN_NOW" ]; then
+    if [ "$YES" = 0 ] && [ -t 0 ] && ask "Are you on the ChatGPT FREE plan (Luna model only)?"; then PLAN_NOW=free; else PLAN_NOW=paid; fi
+  fi
+  mkdir -p "$CONF_DIR"; printf 'CODEX_PLAN=%s\n' "$PLAN_NOW" > "$CONF_DIR/config"
+  ok "plan: $PLAN_NOW (saved in $CONF_DIR/config; change with: bash install.sh --plan free|paid)"
 fi
 
 echo

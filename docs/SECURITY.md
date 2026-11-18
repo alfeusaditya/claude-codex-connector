@@ -41,6 +41,7 @@ Does (after asking, unless `--yes`):
 - `npm i -g @openai/codex`
 - if the global npm folder is not writable: `npm config set prefix ~/.npm-global` and adds one `PATH` line to `~/.zshrc` / `~/.bashrc` (backup `*.before-claude-codex-image`)
 - copies the three skills to `~/.claude/skills/` (old versions are backed up in `~/.claude/skill-backups/`) and creates `~/codex-images`
+- saves your plan (`free`/`paid`) in its own file `~/.config/claude-codex-connector/config`; this is not a Codex or Claude settings file
 
 Does not: use `sudo`, edit `~/.claude/settings.json` or `~/.codex/*`, add hooks or MCP servers, or send data anywhere.
 

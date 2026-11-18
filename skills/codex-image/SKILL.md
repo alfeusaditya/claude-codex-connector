@@ -19,6 +19,10 @@ bash "$HOME/.claude/skills/codex-image/scripts/codex-image.sh" "<prompt>" [optio
 3. The script prints the absolute PNG path on success. View it with the Read tool and run the quality control below.
 4. Deliver it where the user asked (copy it into the project; do not leave it only in `~/codex-images`).
 
+## Plan note
+
+The model is chosen by the script, not by you. On the free plan (`CODEX_PLAN=free` or the connector config) it passes `gpt-6-luna`; image generation itself may not be available on every free plan. If exit code 5 happens on the free plan, tell the user it may be a plan limit rather than a prompt problem.
+
 ## Quality control: you are in charge (do this without being asked)
 
 Codex is a tool; **you** own the result and the final judgment. After every image, look at it (Read tool) and check it against what the user asked:

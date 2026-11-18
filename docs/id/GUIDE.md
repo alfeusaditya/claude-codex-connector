@@ -84,6 +84,14 @@ printf '%s' "$PERTANYAAN" | codex-ask.sh opinion -     # pertanyaan panjang lewa
 
 Kode keluar `codex-ask.sh`: `0` ok, `2` salah pakai, `3` codex tidak ada, `4` belum login, `5` tidak ada jawaban, `6` rahasia terdeteksi (tidak ada yang dikirim), `7` tidak ada diff, `8` terlalu besar.
 
+## Model dan paket
+
+Skrip memilih model per tugas: `--depth quick` (`gpt-6-luna`, tugas ringan), `normal` (model bawaan Codex-mu, default), `deep` (`gpt-6.2-sol`, diff besar/berisiko atau keputusan penting), atau `--model NAMA` eksplisit. Nama model adalah slug dari `codex debug models`; yang bisa dipakai bergantung paketmu.
+
+**Paket free** hanya bisa memakai Luna. Atur sekali: `bash install.sh --plan free` (tersimpan di `~/.config/claude-codex-connector/config`) atau `CODEX_PLAN=free`. Pada paket free semua panggilan memakai `gpt-6-luna` apa pun depth-nya. Kembali: `bash install.sh --plan paid`. Pembuatan gambar mungkin tidak tersedia di semua paket free; bila gagal, kode keluar 5.
+
+Jika model yang dipilih ditolak, skrip mencoba sekali lagi dengan model bawaanmu (hanya paket paid). Setiap run mencetak `model=... plan=... depth=...` di stderr.
+
 ## Memakai skrip gambar langsung
 
 ```bash
