@@ -27,7 +27,7 @@ macOS or Linux, Node.js 18+, Claude Code, a ChatGPT account whose plan includes 
 ## Install
 
 ```bash
-git clone https://github.com/alfeusaditya-cyber/claude-codex-connector.git
+git clone https://github.com/alfeusaditya/claude-codex-connector.git
 cd claude-codex-connector
 bash install.sh          # options: --yes, --check, --uninstall
 ```

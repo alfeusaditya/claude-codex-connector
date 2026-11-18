@@ -15,7 +15,7 @@ Terima kasih. Repo ini sengaja **kecil dan sempit** (Codex, tiga tugas: gambar, 
 ## Alur
 
 ```bash
-git clone https://github.com/alfeusaditya-cyber/claude-codex-connector.git
+git clone https://github.com/alfeusaditya/claude-codex-connector.git
 cd claude-codex-connector
 bash tests/test.sh      # harus ALL PASSED
 bash -n install.sh shared/codex-ask.sh skills/codex-image/scripts/codex-image.sh

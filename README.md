@@ -43,7 +43,7 @@ Gambar di atas dibuat lewat skill `codex-image` dan lolos pemeriksaan Claude; ke
 ## Instalasi (satu perintah)
 
 ```bash
-git clone https://github.com/alfeusaditya-cyber/claude-codex-connector.git
+git clone https://github.com/alfeusaditya/claude-codex-connector.git
 cd claude-codex-connector
 bash install.sh
 ```
