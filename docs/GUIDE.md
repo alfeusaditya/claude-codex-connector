@@ -1,48 +1,50 @@
-# Panduan
+# Guide
 
-Tiga skill: `codex-image` (gambar), `codex-review` (review diff), `codex-opinion` (opini independen). Bagian "Cara kerja" di bawah menjelaskan gambar; review dan opini dijelaskan setelahnya.
+> Bahasa Indonesia: [id/GUIDE.md](id/GUIDE.md)
 
-## Prinsip: Claude memegang kendali
+Three skills: `codex-image` (images), `codex-review` (diff review), `codex-opinion` (independent opinion).
 
-Claude melakukan quality control atas semua hasil Codex dan memutuskan sendiri. Untuk gambar ia merevisi prompt dan mengulang otomatis (maks 2 revisi per gambar, memakai kuota tambahan); untuk review dan opini ia memverifikasi klaim Codex dan bertanya ulang sekali bila jawabannya kabur. Aturan lengkap ada di `SKILL.md` tiap skill, bagian "Quality control".
+## Principle: Claude stays in charge
 
-## Cara kerja
+Claude quality-checks every Codex result and makes the final call. For images it revises the prompt and retries automatically (max 2 revisions per image, which uses extra quota). For review and opinion it verifies Codex's claims and re-asks once if the answer is vague. The full rules are in the "Quality control" section of each `SKILL.md`.
 
-1. Kamu meminta gambar di Claude Code.
-2. Skill `codex-image` (di `~/.claude/skills/codex-image`) memberi Claude instruksi dan aturan.
-3. Claude menyusun prompt bahasa Inggris dan menjalankan `scripts/codex-image.sh`.
-4. Skrip memeriksa Codex terpasang dan sudah login, masuk ke `~/codex-images`, lalu menjalankan:
+## How it works (image)
+
+1. You ask Claude Code for an image.
+2. The `codex-image` skill (in `~/.claude/skills/codex-image`) gives Claude instructions and rules.
+3. Claude writes an English prompt and runs `scripts/codex-image.sh`.
+4. The script checks Codex is installed and logged in, enters `~/codex-images` (or `$CODEX_IMAGE_DIR`), and runs:
    ```
    codex exec --sandbox workspace-write --skip-git-repo-check -
    ```
-   Prompt dikirim lewat stdin (tidak tampil di daftar proses).
-5. Codex memakai image generator bawaannya, menyimpan `nama.png`, dan skrip mencetak path absolutnya.
-6. Claude membuka gambar dan menyalinnya ke proyekmu bila diminta.
+   The prompt goes through stdin, so it does not show up in the process list.
+5. Codex uses its built-in image generator, saves `name.png`, and the script prints the absolute path.
+6. Claude opens the image, checks it, and copies it into your project if asked.
 
-Tidak ada file settings Claude/Codex yang diubah. Skill hanyalah folder di `~/.claude/skills`.
+No Claude or Codex settings files are changed. A skill is just a folder in `~/.claude/skills`.
 
-## Instalasi otomatis
+## Automatic install
 
 ```bash
-bash install.sh --check   # lihat apa yang siap / kurang, tanpa mengubah apa pun
-bash install.sh           # pasang (bertanya sebelum mengubah sesuatu)
-bash install.sh --yes     # pasang tanpa pertanyaan
+bash install.sh --check   # report what is ready / missing, change nothing
+bash install.sh           # install (asks before changing anything)
+bash install.sh --yes     # install without questions
 ```
 
-## Instalasi manual (langkah demi langkah)
+## Manual install (step by step)
 
-1. **Node.js 18+**: `node --version`. Jika belum ada, pasang dari https://nodejs.org.
+1. **Node.js 18+**: `node --version`. Install from https://nodejs.org if missing.
 2. **Codex CLI**:
    ```bash
    npm i -g @openai/codex
    ```
-   Jika muncul `EACCES`, jangan pakai `sudo`. Lihat [TROUBLESHOOTING](TROUBLESHOOTING.md#npm-eacces).
-3. **Login** (browser terbuka, kamu sign-in dengan akun ChatGPT):
+   On `EACCES`, do not use `sudo`. See [TROUBLESHOOTING](TROUBLESHOOTING.md#npm-eacces).
+3. **Log in** (a browser opens; sign in with your ChatGPT account):
    ```bash
    codex login
    codex login status
    ```
-4. **Pasang skill**:
+4. **Install the skills**:
    ```bash
    mkdir -p ~/.claude/skills ~/codex-images
    cp -R skills/codex-image skills/codex-review skills/codex-opinion ~/.claude/skills/
@@ -51,68 +53,68 @@ bash install.sh --yes     # pasang tanpa pertanyaan
    cp shared/codex-ask.sh ~/.claude/skills/codex-opinion/scripts/
    chmod +x ~/.claude/skills/*/scripts/*.sh
    ```
-5. **Uji tanpa Claude**:
+5. **Test without Claude**:
    ```bash
    bash ~/.claude/skills/codex-image/scripts/codex-image.sh "a red apple on a white background" apple
    ```
-   Harus mencetak `/Users/<kamu>/codex-images/apple.png`.
-6. Mulai sesi Claude Code baru dan minta sebuah gambar.
+   It should print `/Users/<you>/codex-images/apple.png`.
+6. Start a new Claude Code session and ask for an image.
 
-## Review kode (`codex-review`)
-
-```bash
-codex-ask.sh review [-C DIR] [--base REF] [--allow-secrets] ["fokus review"]
-```
-
-- Default: perubahan yang belum di-commit (staged + unstaged, dibanding `HEAD`). `--base main` membandingkan `main...HEAD`.
-- File baru yang belum pernah di-`git add` tidak ikut: jalankan `git add -N <file>` dulu.
-- File `.env*`, `*.pem`, `*.key`, `*.p12`, `id_rsa*` dikeluarkan dari diff.
-- Codex jalan `--sandbox read-only --ephemeral` dari folder proyek: tidak bisa menulis, tapi bisa membaca file sekitar untuk konteks.
-- Batas ukuran 300 KB (`CODEX_ASK_MAX_BYTES`). Untuk diff besar, review per direktori atau per commit.
-- Claude diminta melakukan review sendiri juga, memverifikasi temuan Codex, lalu membandingkan keduanya.
-
-## Opini kedua/ketiga (`codex-opinion`)
+## Code review (`codex-review`)
 
 ```bash
-codex-ask.sh opinion [--file PATH]... [--allow-secrets] "pertanyaan"
-printf '%s' "$PERTANYAAN" | codex-ask.sh opinion -     # pertanyaan panjang lewat stdin
+codex-ask.sh review [-C DIR] [--base REF] [--allow-secrets] ["review focus"]
 ```
 
-- Pertanyaan ditulis **netral**, tanpa menyebut jawaban yang disukai Claude (menghindari anchoring).
-- Berjalan dari folder sementara yang kosong; hanya file yang kamu lampirkan yang dikirim.
-- Untuk "opini ketiga", sertakan dua pendapat sebelumnya sebagai Opsi A dan B dan minta Codex menilainya.
+- Default: uncommitted changes (staged + unstaged, against `HEAD`). `--base main` compares `main...HEAD`.
+- Brand-new files that were never `git add`ed are not included: run `git add -N <file>` first.
+- `.env*`, `*.pem`, `*.key`, `*.p12`, `id_rsa*` are excluded from the diff.
+- Codex runs `--sandbox read-only --ephemeral` from the project folder: it cannot write, but it can read surrounding files for context.
+- Size limit 300 KB (`CODEX_ASK_MAX_BYTES`). For big diffs, review per directory or per commit.
+- Claude is expected to review the diff itself too, verify Codex's findings, and compare the two.
 
-Kode keluar `codex-ask.sh`: `0` ok, `2` salah pakai, `3` codex tidak ada, `4` belum login, `5` tidak ada jawaban, `6` rahasia terdeteksi (tidak ada yang dikirim), `7` tidak ada diff, `8` terlalu besar.
-
-## Memakai skrip gambar langsung
+## Second / third opinion (`codex-opinion`)
 
 ```bash
-codex-image.sh "prompt" [nama-file]
+codex-ask.sh opinion [--file PATH]... [--allow-secrets] "question"
+printf '%s' "$QUESTION" | codex-ask.sh opinion -     # long question via stdin
 ```
 
-| Variabel | Fungsi | Default |
+- The question is written **neutrally**, without Claude's preferred answer (avoids anchoring).
+- Runs from an empty temporary folder; only the files you attach are sent.
+- For a "third" opinion, include the two earlier views as Option A and B and ask Codex to judge them.
+
+`codex-ask.sh` exit codes: `0` ok, `2` bad usage, `3` codex missing, `4` not logged in, `5` no answer, `6` secrets detected (nothing sent), `7` no diff, `8` too large.
+
+## Using the image script directly
+
+```bash
+codex-image.sh "prompt" [file-name]
+```
+
+| Variable | Purpose | Default |
 |---|---|---|
-| `CODEX_IMAGE_DIR` | folder hasil | `~/codex-images` |
-| `CODEX_BIN` | path biner codex | dicari di `PATH`, lalu `~/.npm-global/bin` |
+| `CODEX_IMAGE_DIR` | output folder | `~/codex-images` |
+| `CODEX_BIN` | path to the codex binary | looked up on `PATH`, then `~/.npm-global/bin` |
 
-Kode keluar: `0` ok, `2` salah pakai, `3` codex tidak ada, `4` belum login, `5` gambar tidak terbentuk.
-File lama tidak pernah ditimpa; nama dibuat unik.
+Exit codes: `0` ok, `2` bad usage, `3` codex missing, `4` not logged in, `5` no image produced.
+Existing files are never overwritten; names are made unique.
 
-## Tips prompt
+## Prompt tips
 
-- Sebutkan subjek, gaya, komposisi, latar, dan "no text" bila tidak butuh teks.
-- Satu gambar per permintaan. Revisi dengan mengubah prompt, bukan mengulang yang sama.
-- Prompt bahasa Inggris biasanya paling konsisten; Claude menerjemahkan permintaanmu.
+- Name the subject, style, composition and background, and say "no text" if you do not want text.
+- One image per request. Revise by changing the prompt, not by re-running the same one.
+- English prompts tend to be the most consistent; Claude translates your request.
 
 ## Windows
 
-Belum didukung: skrip memakai bash. Opsi: jalankan di WSL (pasang Node, Codex, dan skill di dalam WSL; Claude Code harus berjalan di WSL juga). Belum diuji.
+Not supported: the scripts use bash. An option is WSL (install Node, Codex and the skills inside WSL; Claude Code must also run in WSL). Untested.
 
-## Batasan yang diketahui
+## Known limitations
 
-- Tersedianya pembuatan gambar bergantung pada versi Codex dan paket langgananmu.
-- Tidak ada batas waktu bawaan (macOS tidak punya `timeout`). Hentikan dengan Ctrl+C jika macet.
-- Satu gambar per panggilan; tidak ada antrean atau batch.
-- Deteksi rahasia adalah pola regex sederhana; bisa meleset (dan kadang salah menahan, mis. string uji palsu). Jangan mengandalkannya sebagai satu-satunya pengaman.
-- Kualitas review bergantung pada Codex; ia bisa melewatkan bug. Itu sebabnya Claude diminta memverifikasi dan mereview sendiri.
-- Ditest dengan Codex CLI 0.169.1 di macOS.
+- Image generation depends on your Codex version and subscription plan.
+- No built-in time limit (macOS has no `timeout`). Stop with Ctrl+C if it hangs.
+- One image per call; no queue or batch.
+- Secret detection is a simple regex; it can miss things (and sometimes holds back harmless fake strings, such as test fixtures). Do not rely on it as your only safeguard.
+- Review quality depends on Codex and it can miss bugs, which is why Claude is expected to verify and review on its own.
+- Tested with Codex CLI 0.169.1 on macOS.

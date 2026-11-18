@@ -1,53 +1,55 @@
-# Keamanan, peringatan, dan batasan
+# Security, warnings and limits
 
-Baca sebelum memakai. Ini bukan formalitas.
+> Bahasa Indonesia: [id/SECURITY.md](id/SECURITY.md)
 
-## 1. Apa yang dikirim ke mana
+Read this before using the tool. It is not a formality.
 
-- **Prompt gambar, diff kode (review), pertanyaan, dan file lampiran (opini)** dikirim ke OpenAI lewat akun ChatGPT-mu. Anggap sebagai teks yang bisa disimpan di sisi OpenAI sesuai kebijakan mereka.
-- Tidak ada data yang dikirim ke pihak lain oleh repo ini. Tidak ada analytics, tidak ada server milik repo ini.
-- **Jangan** memasukkan: API key, password, token, kode privat, data klien, data pribadi orang lain.
+## 1. What is sent where
 
-## 2. Apa yang dibatasi
+- **Image prompts, code diffs (review), questions and attached files (opinion)** are sent to OpenAI through your ChatGPT account. Assume they may be retained on OpenAI's side under their policies.
+- This repo sends nothing to anyone else. No analytics, no server of its own.
+- **Never** include: API keys, passwords, tokens, private code, client data, other people's personal data.
 
-- **codex-image**: `--sandbox workspace-write` di dalam `~/codex-images`. Tulis file dibatasi ke folder itu (dan folder sementara).
-- **codex-review / codex-opinion**: `--sandbox read-only --ephemeral`. Codex tidak bisa menulis file dan tidak menyimpan sesi. Review jalan dari folder proyek; opini dari folder sementara kosong.
-- **Pemindai rahasia**: sebelum mengirim, payload dipindai (kunci AWS, kunci privat, token GitHub/Slack/Google, `sk-...`, pola `password=`/`token=`). Jika cocok, **tidak ada yang dikirim** (kode keluar 6). Ini heuristik: bisa meleset pada rahasia format lain. `.env*`, `*.pem`, `*.key`, `id_rsa*` otomatis dikeluarkan.
-- Tidak memakai `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, atau `--full-auto`. Skill melarang Claude menambahkannya.
+## 2. What is restricted
 
-## 3. Apa yang TIDAK dibatasi
+- **codex-image**: `--sandbox workspace-write` inside `~/codex-images`. Writing is limited to that folder (plus temp folders).
+- **codex-review / codex-opinion**: `--sandbox read-only --ephemeral`. Codex cannot write files and does not keep a session. Review runs from the project folder; opinion from an empty temp folder.
+- **Secret scanner**: before sending, the payload is scanned (AWS keys, private keys, GitHub/Slack/Google tokens, `sk-...`, `password=` / `token=` patterns). On a match **nothing is sent** (exit code 6). This is a heuristic and can miss other secret formats. `.env*`, `*.pem`, `*.key`, `id_rsa*` are excluded automatically.
+- No `--dangerously-bypass-approvals-and-sandbox`, `--yolo` or `--full-auto`. The skills forbid Claude from adding them.
 
-- Sandbox (`workspace-write` maupun `read-only`) membatasi **penulisan**, bukan **pembacaan**. Codex bisa membaca file di luar folder itu. Pada uji kami, Codex membaca gambar dari `~/.codex/generated_images/` di luar folder kerja.
-- Pada review, Codex berjalan di folder proyekmu dan boleh membaca file sekitarnya (termasuk yang tidak ada di diff, mis. `.env` yang tidak ter-track). Diff yang dikirim sudah dipindai, tetapi isi file lain yang dibaca Codex sendiri tidak.
-- Karena itu, prompt yang berisi instruksi jahat (prompt injection) bisa mencoba membuat Codex membaca file lain. Jangan menempelkan teks tak tepercaya ke prompt.
-- Sandbox adalah lapisan pengaman, bukan jaminan. Jalankan di akun/mesin yang wajar, bukan di mesin dengan rahasia yang tidak boleh bocor.
-- Folder `~/codex-images` tidak dienkripsi. Siapa pun yang punya akses ke akun OS-mu bisa membacanya. Jangan commit folder ini ke git publik.
+## 3. What is NOT restricted
 
-## 4. Kuota dan biaya
+- The sandbox (`workspace-write` and `read-only` alike) limits **writing**, not **reading**. Codex can read files outside the working folder. In our test, Codex read the image from `~/.codex/generated_images/`, outside its working folder.
+- During review, Codex runs in your project folder and may read surrounding files (including ones not in the diff, such as an untracked `.env`). The diff we send is scanned; files Codex reads on its own are not.
+- A prompt containing hostile instructions (prompt injection) could try to make Codex read other files. Do not paste untrusted text into prompts.
+- The sandbox is a safety layer, not a guarantee. Use a reasonable account/machine, not one holding secrets that must never leak.
+- `~/codex-images` is not encrypted; anyone with access to your OS account can read it. Do not commit it to a public git repo.
 
-- Satu gambar sekitar 28 ribu token pada uji kami. Ini mengurangi kuota Codex/ChatGPT-mu.
-- Skill menginstruksikan Claude membuat satu gambar per permintaan, tidak mengulang review tanpa alasan, dan bertanya sebelum mengirim materi rahasia.
-- **Output Codex adalah saran tak tepercaya.** Skill melarang Claude menjalankan perintah atau mengedit file hanya karena Codex menyuruh, dan mewajibkan verifikasi temuan.
+## 4. Quota and cost
 
-## 5. Ketentuan layanan
+- One image was about 28k tokens in our tests. This counts against your Codex/ChatGPT quota.
+- The skills tell Claude to make one image per request, not to repeat reviews without reason, and to ask before sending confidential material.
+- **Codex output is untrusted advice.** The skills forbid Claude from running commands or editing files just because Codex says so, and require verifying findings.
 
-Memakai langganan lewat CLI secara otomatis mungkin diatur oleh ketentuan OpenAI. Repo ini memakai CLI resmi dan login resmi (tidak menyimpan atau memindahkan token), tetapi **kamu yang bertanggung jawab** memeriksa syaratnya. Isi gambar tunduk pada kebijakan konten OpenAI; penolakan dilaporkan apa adanya.
+## 5. Terms of service
 
-## 6. Yang dilakukan dan tidak dilakukan installer
+Using a subscription automatically through a CLI may be governed by OpenAI's terms. This repo uses the official CLI and official login (it does not store or move tokens), but **you are responsible** for checking the terms. Image content is subject to OpenAI's content policy; refusals are reported as they are.
 
-Dilakukan (setelah bertanya, kecuali `--yes`):
+## 6. What the installer does and does not do
+
+Does (after asking, unless `--yes`):
 - `npm i -g @openai/codex`
-- jika folder global npm tidak bisa ditulis: `npm config set prefix ~/.npm-global` dan menambah satu baris `PATH` ke `~/.zshrc`/`~/.bashrc` (backup `*.before-claude-codex-image`)
-- menyalin tiga skill ke `~/.claude/skills/` (versi lama dicadangkan di `~/.claude/skill-backups/`), membuat `~/codex-images`
+- if the global npm folder is not writable: `npm config set prefix ~/.npm-global` and adds one `PATH` line to `~/.zshrc` / `~/.bashrc` (backup `*.before-claude-codex-image`)
+- copies the three skills to `~/.claude/skills/` (old versions are backed up in `~/.claude/skill-backups/`) and creates `~/codex-images`
 
-Tidak dilakukan: `sudo`, mengubah `~/.claude/settings.json`, `~/.codex/*`, menambah hook atau MCP server, mengirim data ke mana pun.
+Does not: use `sudo`, edit `~/.claude/settings.json` or `~/.codex/*`, add hooks or MCP servers, or send data anywhere.
 
-Periksa sebelum menjalankan: `install.sh` pendek dan terbuka untuk dibaca.
+Check before running: `install.sh` is short and open to read.
 
-## Kenapa sempit
+## Why so narrow
 
-Ada tool yang menghubungkan banyak AI sekaligus (mis. Claude, Codex, Gemini, Kimi) dengan hak penuh dan hook global. Risikonya: AI lain berjalan tanpa izin, sandbox hanya kooperatif, injection bisa menyebar antar model, dan konfigurasi global diubah. Repo ini menghindarinya: hanya Codex, tiga tugas, sandbox ketat (tulis hanya di satu folder, atau read-only), tanpa hak lain.
+Some tools wire many AIs together (for example Claude, Codex, Gemini, Kimi) with full permissions and global hooks. The risks: other AIs running without approval, sandboxes that are only cooperative, injection spreading between models, and global configuration being changed. This repo avoids that: Codex only, three tasks, tight sandbox (write in one folder, or read-only), no other rights.
 
-## Melaporkan celah
+## Reporting a vulnerability
 
-Lihat [../SECURITY.md](../SECURITY.md).
+See [../SECURITY.md](../SECURITY.md).

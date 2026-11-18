@@ -1,6 +1,8 @@
-# Pemecahan masalah
+# Troubleshooting
 
-Mulai dengan `bash install.sh --check`. Ia melaporkan apa yang kurang tanpa mengubah apa pun.
+> Bahasa Indonesia: [id/TROUBLESHOOTING.md](id/TROUBLESHOOTING.md)
+
+Start with `bash install.sh --check`. It reports what is missing without changing anything.
 
 ## npm EACCES
 
@@ -8,7 +10,7 @@ Mulai dengan `bash install.sh --check`. Ia melaporkan apa yang kurang tanpa meng
 npm error code EACCES ... mkdir '/usr/local/lib/node_modules/@openai'
 ```
 
-npm mencoba menulis ke folder sistem. **Jangan pakai `sudo`.** Pakai folder di home:
+npm tried to write to a system folder. **Do not use `sudo`.** Use a folder in your home directory:
 
 ```bash
 mkdir -p ~/.npm-global && npm config set prefix ~/.npm-global
@@ -16,55 +18,55 @@ echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 npm i -g @openai/codex
 ```
 
-(`install.sh` menawarkan ini otomatis.) Catatan: ketik `@` biasa, bukan `＠` (huruf lebar) hasil copy-paste.
+(`install.sh` offers this automatically.) Note: type a normal `@`, not a full-width `＠` that can come from copy-paste.
 
 ## `codex: command not found`
 
-PATH belum memuat folder npm global. Buka terminal baru, atau `source ~/.zshrc`. Cek `ls ~/.npm-global/bin`. Skrip juga mencari di `~/.npm-global/bin`; untuk lokasi lain set `CODEX_BIN=/path/ke/codex`.
+The npm global folder is not on your PATH. Open a new terminal or run `source ~/.zshrc`. Check `ls ~/.npm-global/bin`. The scripts also look in `~/.npm-global/bin`; for another location set `CODEX_BIN=/path/to/codex`.
 
-## Kode keluar 4: belum login
+## Exit code 4: not logged in
 
 ```bash
 codex login
 codex login status
 ```
 
-Browser terbuka untuk sign-in ChatGPT. Di mesin tanpa browser: `codex login --device-auth`. Claude tidak bisa melakukan ini untukmu.
+A browser opens for ChatGPT sign-in. On a machine without a browser: `codex login --device-auth`. Claude cannot do this for you.
 
-## Kode keluar 5: gambar tidak terbentuk
+## Exit code 5: no image produced
 
-Baca `~/codex-images/.last-error.log`. Penyebab umum:
-- kuota habis atau limit tercapai: tunggu reset
-- paket langgananmu tidak mendukung pembuatan gambar di Codex
-- prompt ditolak kebijakan konten: ubah prompt, jangan cari jalan memutar
-- Codex versi lama: `npm i -g @openai/codex@latest`
+Read `~/codex-images/.last-error.log`. Common causes:
+- quota exhausted or limit reached: wait for the reset
+- your plan does not support image generation in Codex
+- prompt refused by content policy: change the prompt; do not look for a workaround
+- old Codex version: `npm i -g @openai/codex@latest`
 
-## Review/opini: kode keluar 6 (rahasia terdeteksi)
+## Review/opinion: exit code 6 (secrets detected)
 
-Tidak ada yang dikirim. Hapus rahasia dari diff/file, atau (hanya jika yakin itu palsu/uji) jalankan dengan `--allow-secrets`. Repo ini sendiri memuat string uji palsu di `tests/test.sh`, jadi me-review repo ini memerlukan `--allow-secrets`.
+Nothing was sent. Remove the secrets from the diff/file, or (only if you are sure they are fake/test values) run with `--allow-secrets`. This repo itself contains fake secret strings in `tests/test.sh`, so reviewing this repo requires `--allow-secrets`.
 
-## Review: kode keluar 7 (tidak ada diff)
+## Review: exit code 7 (no diff)
 
-Tidak ada perubahan terhadap `HEAD`. Cek branch, pakai `--base main`, atau jalankan `git add -N <file>` untuk file baru.
+No changes against `HEAD`. Check the branch, use `--base main`, or run `git add -N <file>` for new files.
 
-## Review/opini: kode keluar 8 (terlalu besar)
+## Review/opinion: exit code 8 (too large)
 
-Batas 300 KB. Review per direktori/commit, lampirkan file lebih sedikit, atau naikkan `CODEX_ASK_MAX_BYTES` (ingat: makin besar, makin banyak kuota dan data terkirim).
+The limit is 300 KB. Review per directory/commit, attach fewer files, or raise `CODEX_ASK_MAX_BYTES` (remember: more quota used and more data sent).
 
-## Claude tidak memakai skill
+## Claude does not use the skill
 
-- Mulai **sesi baru** setelah instalasi.
-- Pastikan ada `~/.claude/skills/codex-image/SKILL.md` (dan `codex-review`, `codex-opinion`).
-- Sebut jelas: "buat gambar ... pakai codex".
+- Start a **new session** after installing.
+- Make sure `~/.claude/skills/codex-image/SKILL.md` exists (and `codex-review`, `codex-opinion`).
+- Be explicit: "generate an image ... using codex".
 
 ## `timeout: command not found` (macOS)
 
-Tidak dipakai oleh repo ini. Jika kamu membungkus skrip sendiri, pakai `gtimeout` dari `brew install coreutils`.
+Not used by this repo. If you wrap the scripts yourself, use `gtimeout` from `brew install coreutils`.
 
-## Prosesnya macet
+## The process hangs
 
-Tekan Ctrl+C. Tidak ada batas waktu bawaan.
+Press Ctrl+C. There is no built-in time limit.
 
-## Masih gagal
+## Still failing
 
-Buka issue dengan keluaran `bash install.sh --check`, `codex --version`, dan OS-mu. **Hapus semua data pribadi dan token** dari log sebelum menempel.
+Open an issue with the output of `bash install.sh --check`, `codex --version` and your OS. **Remove all personal data and tokens** from logs before pasting.

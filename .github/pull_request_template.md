@@ -1,7 +1,7 @@
-## Perubahan
+## Change
 
 ## Checklist
-- [ ] `bash tests/test.sh` ALL PASSED
-- [ ] Tidak melonggarkan keamanan (lihat CONTRIBUTING.md aturan 1)
-- [ ] Docs dan CHANGELOG diperbarui
-- [ ] Tidak ada token/log/gambar pribadi
+- [ ] `bash tests/test.sh` prints ALL PASSED
+- [ ] No loosening of security (see CONTRIBUTING.md rule 1)
+- [ ] Docs and CHANGELOG updated
+- [ ] No tokens, logs or private images

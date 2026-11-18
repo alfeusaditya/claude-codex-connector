@@ -2,45 +2,44 @@
 
 <p align="center"><img src="docs/assets/banner.png" alt="Claude and Codex connected by a cable carrying image, code review and chat icons" width="100%"></p>
 
-Hubungkan **Claude Code** ke **Codex (OpenAI)** lewat langganan ChatGPT kamu: **buat gambar**, **review kode**, dan **minta opini kedua/ketiga**. Tanpa API key, tanpa server tambahan, tanpa mengubah file settings Claude atau Codex.
+Let **Claude Code** use **Codex (OpenAI)** through your existing ChatGPT subscription: **generate images**, **review code**, and get a **second or third opinion**. No API keys, no extra servers, and it never edits your Claude or Codex settings files.
 
-> English summary: [README.en.md](README.en.md)
+> Bahasa Indonesia: [README.id.md](README.id.md)
 
-## Tiga skill
+## Three skills
 
-| Skill | Fungsi | Contoh permintaan | Akses Codex |
+| Skill | What it does | Example request | Codex access |
 |---|---|---|---|
-| `codex-image` | Codex membuat gambar, Claude mengambil file PNG-nya | "Buatkan logo kucing astronot" | tulis hanya di `~/codex-images` |
-| `codex-review` | Codex me-review `git diff` sebagai reviewer independen | "Minta Codex review perubahan saya" | **read-only** |
-| `codex-opinion` | Codex memberi opini independen atas pertanyaan/desain/rencana | "Minta opini kedua dari Codex: Postgres atau SQLite?" | **read-only** |
+| `codex-image` | Codex draws, Claude gets the PNG | "Make a logo of an astronaut cat" | writes only in `~/codex-images` |
+| `codex-review` | Codex reviews your `git diff` as an independent reviewer | "Ask Codex to review my changes" | **read-only** |
+| `codex-opinion` | Codex gives an independent opinion on a question, design or plan | "Get a second opinion from Codex: Postgres or SQLite?" | **read-only** |
 
 ```
-Kamu ──> Claude Code ──(skill)──> codex exec (sandbox) ──> jawaban / file
+You --> Claude Code --(skill)--> codex exec (sandboxed) --> answer / file
 ```
 
-Claude tidak menelan mentah jawaban Codex: skill menyuruhnya memverifikasi temuan, membandingkan dengan pendapatnya sendiri, dan memperlakukan output Codex sebagai saran yang tidak tepercaya.
+Not affiliated with Anthropic or OpenAI. MIT licensed.
 
-Tidak berafiliasi dengan Anthropic atau OpenAI. Lisensi MIT.
+## Principle: Claude stays in charge
 
-## Prinsip: Claude yang memegang kendali
+Codex is a tool, not the decision-maker. Each skill makes Claude do this **without being asked**:
 
-Codex adalah alat, bukan pengambil keputusan. Setiap skill mewajibkan Claude, **tanpa disuruh**, untuk:
-- **codex-image**: memeriksa gambar (teks persis, gaya, komposisi, artefak) dan merevisi prompt sendiri sampai 2 kali jika kurang pas, lalu melaporkan apa yang diperbaiki.
-- **codex-review**: me-review sendiri, memberi label tiap temuan Codex (terkonfirmasi / false positive / belum terverifikasi), dan bertanya ulang sekali jika jawabannya kabur.
-- **codex-opinion**: menilai jawaban Codex, memverifikasi klaimnya, bertanya ulang sekali jika kabur, lalu memberi rekomendasi **Claude sendiri**.
+- **codex-image**: inspect the image (exact text, style, composition, artifacts) and revise the prompt itself, up to 2 retries, then report what was fixed.
+- **codex-review**: review the diff itself, label every Codex finding (confirmed / false positive / unverified), and re-ask once if the answer is vague.
+- **codex-opinion**: judge Codex's answer, verify its claims, re-ask once if vague, then give **its own** recommendation.
 
-Gambar di atas dibuat lewat skill `codex-image` dan lolos pemeriksaan Claude; kedua karakter adalah ilustrasi orisinal, bukan logo resmi Anthropic atau OpenAI.
+The banner above was made with `codex-image` and passed Claude's check. The two characters are original art, not official Anthropic or OpenAI logos.
 
-## Prasyarat
+## Requirements
 
-| Kebutuhan | Keterangan |
+| Need | Notes |
 |---|---|
-| macOS atau Linux | Windows belum didukung (lihat [docs/GUIDE.md](docs/GUIDE.md#windows)) |
+| macOS or Linux | Windows is not supported yet (see [docs/GUIDE.md](docs/GUIDE.md#windows)) |
 | Node.js 18+ | https://nodejs.org |
-| Claude Code | sudah terpasang |
-| Akun ChatGPT | paket yang mendukung Codex dan pembuatan gambar. **Belum diverifikasi untuk semua paket**; uji dengan satu gambar |
+| Claude Code | already installed |
+| ChatGPT account | a plan that includes Codex and image generation. **Not verified for every plan**; test with one image |
 
-## Instalasi (satu perintah)
+## Install (one command)
 
 ```bash
 git clone https://github.com/alfeusaditya/claude-codex-connector.git
@@ -48,47 +47,47 @@ cd claude-codex-connector
 bash install.sh
 ```
 
-Installer akan:
-1. memeriksa Node.js,
-2. memasang `@openai/codex` (jika belum ada) dan **bertanya dulu** sebelum mengubah apa pun di luar folder skill,
-3. membantu `codex login` (sign-in lewat browser, kamu yang melakukannya),
-4. menyalin tiga skill ke `~/.claude/skills/` dan membuat `~/codex-images`.
+The installer will:
+1. check Node.js,
+2. install `@openai/codex` if missing, and **ask first** before changing anything outside the skill folders,
+3. help you run `codex login` (browser sign-in, you do it),
+4. copy the three skills to `~/.claude/skills/` and create `~/codex-images`.
 
-Lalu **mulai sesi Claude Code baru** dan minta:
+Then **start a new Claude Code session** and try:
 
-> "Buatkan gambar apel merah di latar putih"
-> "Minta Codex review perubahan yang belum di-commit"
-> "Minta opini kedua dari Codex soal pendekatan ini: ..."
+> "Generate an image of a red apple on a white background"
+> "Ask Codex to review my uncommitted changes"
+> "Get a second opinion from Codex on this approach: ..."
 
-Opsi installer: `--yes` (jawab ya semua), `--check` (hanya periksa, tidak mengubah apa pun), `--uninstall`.
+Installer options: `--yes` (answer yes to everything), `--check` (report only, change nothing), `--uninstall`.
 
-## Panduan lengkap
+## Documentation
 
-- [docs/GUIDE.md](docs/GUIDE.md): cara pakai, tips prompt, cara kerja, instalasi manual langkah demi langkah
-- [docs/SECURITY.md](docs/SECURITY.md): **baca ini**: peringatan, data yang dikirim, batasan sandbox
-- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md): error umum (termasuk `EACCES` npm)
-- [docs/UNINSTALL.md](docs/UNINSTALL.md): cara menghapus bersih
+- [docs/GUIDE.md](docs/GUIDE.md): usage, prompt tips, how it works, manual install step by step
+- [docs/SECURITY.md](docs/SECURITY.md): **read this**: warnings, what is sent where, sandbox limits
+- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md): common errors (including npm `EACCES`)
+- [docs/UNINSTALL.md](docs/UNINSTALL.md): clean removal
 - [CONTRIBUTING.md](CONTRIBUTING.md) · [CHANGELOG.md](CHANGELOG.md) · [SECURITY.md](SECURITY.md)
 
-## Peringatan singkat
+## Warnings
 
-- Prompt, **diff kode**, dan file yang dilampirkan dikirim ke OpenAI. **Jangan** menyertakan rahasia, kunci API, atau kode/data klien yang rahasia. Review dan opini memindai pola rahasia dan menolak mengirim, tetapi itu hanya heuristik.
-- Setiap panggilan memakai kuota Codex-mu (satu gambar sekitar 28 ribu token pada uji kami).
-- Sandbox Codex (`workspace-write` untuk gambar, `read-only` untuk review/opini) membatasi penulisan, tetapi **bukan** pengganti isolasi penuh. Lihat [docs/SECURITY.md](docs/SECURITY.md).
-- Penggunaan otomatis langganan lewat CLI mengikuti ketentuan layanan OpenAI. Periksa sendiri syaratnya.
+- Prompts, **code diffs** and attached files are sent to OpenAI. Do **not** include secrets, API keys, or confidential client code/data. Review and opinion scan for secret patterns and refuse to send, but that is only a heuristic.
+- Every call uses your Codex quota (one image was about 28k tokens in our tests).
+- The Codex sandbox (`workspace-write` for images, `read-only` for review/opinion) limits writing, not reading, and is not full isolation. See [docs/SECURITY.md](docs/SECURITY.md).
+- Automating a subscription through a CLI is subject to OpenAI's terms. Check them yourself.
 
-## Kenapa bukan Frenemy atau tool sejenis?
+## Why not a bigger multi-AI bridge?
 
-Repo ini sengaja kecil: **hanya Codex, hanya tiga tugas, sandbox ketat** (gambar: tulis di satu folder; review/opini: read-only). Tidak ada hook global, tidak ada AI lain yang berjalan tanpa izin, dan tidak ada perubahan pada konfigurasi Claude/Codex. Alasannya ada di [docs/SECURITY.md](docs/SECURITY.md#kenapa-sempit).
+This repo is deliberately small: **Codex only, three tasks, tight sandbox** (images: write in one folder; review/opinion: read-only). No global hooks, no other AI running without permission, no changes to your Claude/Codex configuration. The reasoning is in [docs/SECURITY.md](docs/SECURITY.md#why-so-narrow).
 
-## Uji
+## Test
 
 ```bash
 bash tests/test.sh
 ```
 
-Tes berjalan offline dengan `codex` palsu; tidak memakai jaringan atau kuota.
+Runs offline with a fake `codex`; no network, no quota.
 
-## Lisensi
+## License
 
 [MIT](LICENSE)

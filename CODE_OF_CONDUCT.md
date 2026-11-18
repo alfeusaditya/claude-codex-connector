@@ -1,5 +1,5 @@
-# Kode etik
+# Code of conduct
 
-Bersikap sopan dan konstruktif. Kritik kode, bukan orangnya. Tidak ada pelecehan, diskriminasi, atau serangan pribadi. Pemelihara boleh menghapus komentar, menutup issue, atau memblokir akun yang melanggar. Laporkan pelanggaran lewat tab Security atau hubungi pemilik repo di GitHub.
+Be respectful and constructive. Criticize code, not people. No harassment, discrimination or personal attacks. Maintainers may remove comments, close issues or block accounts that violate this. Report violations through the Security tab or by contacting the repo owner on GitHub.
 
-Diadaptasi secara ringkas dari semangat [Contributor Covenant](https://www.contributor-covenant.org/).
+Loosely adapted from the spirit of the [Contributor Covenant](https://www.contributor-covenant.org/).

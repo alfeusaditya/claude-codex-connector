@@ -1,15 +1,15 @@
-# Kebijakan keamanan
+# Security policy
 
-## Melaporkan celah
+## Reporting a vulnerability
 
-Jangan buka issue publik untuk celah keamanan. Gunakan **GitHub → tab Security → "Report a vulnerability"** (private vulnerability reporting) di repo ini. Sertakan langkah reproduksi dan versi (lihat [CHANGELOG.md](CHANGELOG.md)).
+Do not open a public issue for a security problem. Use **GitHub, Security tab, "Report a vulnerability"** (private vulnerability reporting) on this repo. Include reproduction steps and the version (see [CHANGELOG.md](CHANGELOG.md)).
 
-Ini proyek hobi tanpa SLA; laporan ditanggapi sebisanya.
+This is a hobby project with no SLA; reports are handled on a best-effort basis.
 
-## Cakupan
+## Scope
 
-Dalam cakupan: `install.sh`, `skills/*` dan `shared/codex-ask.sh` (skrip dan instruksi skill), termasuk celah pada pemindai rahasia, alur yang memungkinkan penulisan di luar `~/codex-images` atau eksekusi tak terduga.
+In scope: `install.sh`, `skills/*` and `shared/codex-ask.sh` (scripts and skill instructions), including weaknesses in the secret scanner and any path that allows writing outside `~/codex-images` or unexpected execution.
 
-Di luar cakupan: celah di Codex CLI, Claude Code, atau layanan OpenAI/Anthropic (laporkan ke mereka).
+Out of scope: vulnerabilities in the Codex CLI, Claude Code, or OpenAI/Anthropic services (report those to them).
 
-Batasan yang sudah diketahui dan didokumentasikan ada di [docs/SECURITY.md](docs/SECURITY.md).
+Known, documented limits are in [docs/SECURITY.md](docs/SECURITY.md).

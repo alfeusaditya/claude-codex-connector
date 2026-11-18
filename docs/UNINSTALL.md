@@ -1,27 +1,29 @@
-# Menghapus
+# Uninstall
 
-## Hanya skill
+> Bahasa Indonesia: [id/UNINSTALL.md](id/UNINSTALL.md)
+
+## Skills only
 
 ```bash
 bash install.sh --uninstall
 ```
 
-Menghapus tiga skill di `~/.claude/skills/` (`codex-image`, `codex-review`, `codex-opinion`). Codex, login, dan gambarmu tetap ada.
+Removes the three skills in `~/.claude/skills/` (`codex-image`, `codex-review`, `codex-opinion`). Codex, your login and your images stay.
 
-## Hapus semuanya (manual, pilih yang perlu)
+## Remove everything (manual, pick what you need)
 
 ```bash
-npm uninstall -g @openai/codex      # hapus Codex CLI
-codex logout                        # jalankan SEBELUM uninstall: cabut login
-rm -rf ~/codex-images               # HAPUS SEMUA gambar hasil (tidak bisa dikembalikan)
+codex logout                        # run BEFORE uninstalling: revokes the login
+npm uninstall -g @openai/codex      # remove the Codex CLI
+rm -rf ~/codex-images               # DELETES ALL generated images (cannot be undone)
 ```
 
-Jika installer menambah PATH: hapus baris `export PATH="$HOME/.npm-global/bin:$PATH"` dari `~/.zshrc` (atau `~/.bashrc`). Backup sebelum perubahan: `~/.zshrc.before-claude-codex-image`.
+If the installer added to PATH: remove the line `export PATH="$HOME/.npm-global/bin:$PATH"` from `~/.zshrc` (or `~/.bashrc`). Pre-change backup: `~/.zshrc.before-claude-codex-image`.
 
-Kembalikan prefix npm bila perlu:
+Restore the npm prefix if needed:
 
 ```bash
 npm config delete prefix
 ```
 
-Cache login Codex dan gambar mentah ada di `~/.codex/` (mis. `~/.codex/generated_images/`). Hapus sendiri bila tidak ingin menyimpannya.
+Old skill backups live in `~/.claude/skill-backups/`. Codex's login cache and raw generated images are in `~/.codex/` (for example `~/.codex/generated_images/`); delete them yourself if you do not want to keep them.

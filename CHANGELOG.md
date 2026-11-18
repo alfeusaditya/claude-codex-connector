@@ -1,31 +1,43 @@
 # Changelog
 
-Format mengikuti [Keep a Changelog](https://keepachangelog.com/); versi mengikuti [SemVer](https://semver.org/).
+Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow [SemVer](https://semver.org/).
+
+## [1.3.0] - 2026-11-18
+
+### Changed
+- Documentation is now English first. Indonesian versions are kept in `README.id.md` and `docs/id/`.
+- Repository URLs updated to the new GitHub username.
+
+### Added
+- 1280x640 social preview image (`docs/assets/social-preview.png`).
 
 ## [1.2.0] - 2026-11-18
 
 ### Added
-- Aturan "Quality control: Claude in charge" di ketiga skill: revisi otomatis gambar (maks 2x), pelabelan temuan review, tanya ulang sekali bila jawaban Codex kabur.
-- Banner repo (`docs/assets/banner.png`), dibuat dengan `codex-image`.
+- "Quality control: Claude in charge" rules in all three skills: automatic image revision (max 2), labelling of review findings, one re-ask when Codex's answer is vague.
+- Repo banner (`docs/assets/banner.png`), made with `codex-image`.
+
+### Fixed
+- Installer backups now go to `~/.claude/skill-backups/` so they are not loaded as duplicate skills.
 
 ## [1.1.0] - 2026-11-18
 
 ### Added
-- Skill `codex-review`: review `git diff` oleh Codex (read-only, ephemeral).
-- Skill `codex-opinion`: opini independen Codex (read-only, folder sementara).
-- `shared/codex-ask.sh` dengan pemindai rahasia, batas ukuran, dan pengecualian file sensitif.
-- Installer memasang tiga skill; tes dan docs diperbarui.
+- Skill `codex-review`: Codex reviews the `git diff` (read-only, ephemeral).
+- Skill `codex-opinion`: independent Codex opinion (read-only, temp folder).
+- `shared/codex-ask.sh` with secret scanning, size cap and sensitive-file exclusion.
+- Installer handles three skills; tests and docs updated.
 
 ### Changed
-- Proyek berganti nama menjadi **Claude-Codex Connector** (repo `claude-codex-connector`).
+- Project renamed to **Claude-Codex Connector** (`claude-codex-connector`).
 
 ## [1.0.0] - 2026-11-18
 
 ### Added
-- Skill `codex-image` untuk Claude Code, dengan aturan penggunaan.
-- `codex-image.sh`: prompt via stdin, folder terkunci `~/codex-images`, tidak menimpa file, kode keluar terdokumentasi.
-- `install.sh` dengan `--check`, `--yes`, `--uninstall`; tidak memakai sudo; bertanya sebelum perubahan.
-- Tes offline (`tests/test.sh`) dengan `codex` palsu, dan CI GitHub Actions.
-- Dokumentasi: panduan, keamanan, troubleshooting, uninstall.
+- Skill `codex-image` for Claude Code, with usage rules.
+- `codex-image.sh`: prompt via stdin, locked folder `~/codex-images`, never overwrites files, documented exit codes.
+- `install.sh` with `--check`, `--yes`, `--uninstall`; no sudo; asks before changing anything.
+- Offline tests (`tests/test.sh`) with a fake `codex`, and GitHub Actions CI.
+- Docs: guide, security, troubleshooting, uninstall.
 
-Diuji dengan Codex CLI 0.169.1 di macOS.
+Tested with Codex CLI 0.169.1 on macOS.

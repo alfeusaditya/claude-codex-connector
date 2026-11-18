@@ -1,28 +1,28 @@
-# Berkontribusi
+# Contributing
 
-Terima kasih. Repo ini sengaja **kecil dan sempit** (Codex, tiga tugas: gambar, review, opini). Pull request yang memperluas cakupan perlu alasan kuat.
+Thanks. This repo is deliberately **small and narrow** (Codex, three tasks: image, review, opinion). Pull requests that widen the scope need a strong reason.
 
-## Aturan
+## Rules
 
-1. **Tidak ada pelonggaran keamanan.** `codex-review` dan `codex-opinion` harus tetap `--sandbox read-only`. Tidak boleh menambah `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `--full-auto`, `sudo`, hook global, atau perubahan ke settings Claude/Codex.
-2. **Bagian "Quality control" di setiap `SKILL.md` harus tetap ada**: Claude yang memegang kendali atas hasil Codex.
-3. **Tanpa dependensi baru.** Bash + Node/npm yang sudah ada.
-4. Installer harus tetap: bertanya sebelum mengubah sesuatu, bisa diulang (idempotent), punya `--check` dan `--uninstall`, dan membuat backup sebelum mengubah file milik pengguna.
-5. Perubahan perilaku wajib punya tes di `tests/test.sh` dan dokumentasi yang diperbarui.
-6. Perbarui [CHANGELOG.md](CHANGELOG.md).
-7. Jangan menyertakan token, log pribadi, atau gambar pribadi di issue/PR.
+1. **No loosening of security.** `codex-review` and `codex-opinion` must stay `--sandbox read-only`. Never add `--dangerously-bypass-approvals-and-sandbox`, `--yolo`, `--full-auto`, `sudo`, global hooks, or edits to Claude/Codex settings.
+2. **The "Quality control" section in every `SKILL.md` must stay**: Claude stays in charge of Codex's output.
+3. **No new dependencies.** Bash plus the Node/npm already required.
+4. The installer must keep: asking before changing anything, being idempotent, having `--check` and `--uninstall`, and backing up user files before modifying them.
+5. Behavior changes need a test in `tests/test.sh` and updated docs.
+6. Update [CHANGELOG.md](CHANGELOG.md).
+7. Never include tokens, personal logs or private images in issues/PRs.
 
-## Alur
+## Workflow
 
 ```bash
 git clone https://github.com/alfeusaditya/claude-codex-connector.git
 cd claude-codex-connector
-bash tests/test.sh      # harus ALL PASSED
+bash tests/test.sh      # must print ALL PASSED
 bash -n install.sh shared/codex-ask.sh skills/codex-image/scripts/codex-image.sh
 ```
 
-Jika punya `shellcheck`, jalankan juga. CI menjalankan semuanya.
+Run `shellcheck` too if you have it. CI runs all of this.
 
-Gaya commit: [Conventional Commits](https://www.conventionalcommits.org/) (`fix:`, `feat:`, `docs:`).
+Commit style: [Conventional Commits](https://www.conventionalcommits.org/) (`fix:`, `feat:`, `docs:`). Docs are English first; Indonesian translations live in `docs/id/` and `README.id.md` (updates welcome, not required for a PR).
 
-Dengan berkontribusi, kamu setuju karyamu berlisensi MIT.
+By contributing you agree your work is licensed under MIT.

@@ -1,16 +1,16 @@
 ---
 name: Bug report
-about: Instalasi atau pembuatan gambar gagal
+about: Install or generation/review/opinion failed
 labels: bug
 ---
 
-**Keluaran `bash install.sh --check`:**
+**Output of `bash install.sh --check`:**
 
 ```
 ```
 
-**`codex --version`, OS, versi Node:**
+**`codex --version`, OS, Node version:**
 
-**Yang kamu lakukan dan yang terjadi:**
+**What you did and what happened:**
 
-> Hapus token, path pribadi, dan isi prompt yang rahasia sebelum menempel. Celah keamanan: jangan di sini, lihat SECURITY.md.
+> Remove tokens, personal paths and any confidential prompt text before pasting. Security issues: not here, see SECURITY.md.
