@@ -63,7 +63,7 @@ bash install.sh --yes     # install without questions
 ## Code review (`codex-review`)
 
 ```bash
-codex-ask.sh review [-C DIR] [--base REF] [--depth D] [--model M] [--allow-secrets] ["review focus"]
+codex-ask.sh review [-C DIR] [--base REF] [--model M] [--allow-secrets] ["review focus"]
 ```
 
 - Default: uncommitted changes (staged + unstaged, against `HEAD`). `--base main` compares `main...HEAD`.
@@ -76,7 +76,7 @@ codex-ask.sh review [-C DIR] [--base REF] [--depth D] [--model M] [--allow-secre
 ## Second / third opinion (`codex-opinion`)
 
 ```bash
-codex-ask.sh opinion [--file PATH]... [--depth D] [--model M] [--allow-secrets] "question"
+codex-ask.sh opinion [--file PATH]... [--model M] [--allow-secrets] "question"
 printf '%s' "$QUESTION" | codex-ask.sh opinion -     # long question via stdin
 ```
 
@@ -88,28 +88,31 @@ printf '%s' "$QUESTION" | codex-ask.sh opinion -     # long question via stdin
 
 ## Models and plans
 
-Codex has several models. The scripts pick one per task so Claude can match effort to the job.
+Every time you invoke a skill, Claude **asks which model to use** (unless you already named one, or you are on the Free/Go plan).
 
-| Option | Meaning |
-|---|---|
-| `--depth quick` | `gpt-6-luna` (small, cheap) for simple questions and small diffs |
-| `--depth normal` (default) | your own Codex default model (`model` in `~/.codex/config.toml`) |
-| `--depth deep` | `gpt-6.2-sol` for large/risky diffs and high-stakes decisions |
-| `--model NAME` | explicit model; overrides depth |
+| Choice | Codex model | Notes |
+|---|---|---|
+| **Default** | your own Codex default (`model` in `~/.codex/config.toml`) | nothing is overridden |
+| **Luna** | `gpt-6-luna` | lightest tier; the only one on **Free / Go** plans |
+| **Terra** | `gpt-6.1-terra` | middle tier |
+| **Sol** | `gpt-6.2-sol` | heavier tier |
+| **Astra** | `gpt-6.2-astra` | if the question dialog only fits 4 options, type "Astra" under "Other" |
 
-Defaults can be changed with `CODEX_MODEL_QUICK`, `CODEX_MODEL_DEEP`, `CODEX_MODEL` (used for `normal`). Model names are the slugs from `codex debug models` (for example `gpt-6.1-sol`, `gpt-6.1-terra`, `gpt-6-astra`, `gpt-5.6-luna`). Which ones you may use depends on your plan.
+Claude recommends one based on the task (for example Luna for a small diff, Sol or Astra for a risky one) and tells you which model was used. Heavier tiers use more Codex quota. The names map to the latest slug of each family that Codex lists on this machine (`codex debug models`); change a mapping with `CODEX_MODEL_LUNA`, `CODEX_MODEL_TERRA`, `CODEX_MODEL_SOL`, `CODEX_MODEL_ASTRA`. A raw slug such as `gpt-6.1-sol` also works with `--model`.
 
-**Free plan.** Free accounts can only use the Luna model. Tell the connector once:
+On the command line: `--model luna|terra|sol|astra|default` (default if omitted).
+
+**Free and Go plans (Luna only).** Tell the connector once:
 
 ```bash
-bash install.sh --plan free        # saved in ~/.config/claude-codex-connector/config
+bash install.sh --plan free        # or: --plan go   (saved in ~/.config/claude-codex-connector/config)
 ```
 
-or set `CODEX_PLAN=free`. With the free plan every call uses `gpt-6-luna`, whatever depth is requested (a notice is printed). Switch back with `bash install.sh --plan paid`. Image generation may not be available on every free plan; if it is not, `codex-image` reports exit code 5.
+or set `CODEX_PLAN=free|go`. Then every call uses Luna, whatever is requested (a notice is printed) and Claude does not ask. Switch back with `bash install.sh --plan paid`. `codex-ask.sh plan` and `codex-image.sh --show-plan` print the current plan. Image generation may not be available on every free plan; if not, `codex-image` exits with code 5.
 
-**Fallback.** If a chosen model is rejected or returns nothing, the script retries once with your default model (paid plan only) and says so on stderr. Every run prints `codex-ask: model=... plan=... depth=...` so you can see what was used.
+**Fallback.** On the paid plan, if the chosen model is rejected or returns nothing, the script retries once with your default model and says so on stderr.
 
-For `codex-image`, the model only drives the text model that orchestrates the image tool, so it is **not** a quality knob for the picture; it is unset by default (`CODEX_IMAGE_MODEL` to set it).
+For `codex-image` the model drives only the text model that orchestrates the image tool, so it is probably not a picture-quality knob (not verified).
 
 ## Using the image script directly
 

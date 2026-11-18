@@ -10,18 +10,31 @@ Claude Code cannot draw images itself. This skill hands the drawing to Codex CLI
 ## How to use
 
 1. Turn the user's request into one clear, concrete English prompt (subject, style, composition, background, aspect, "no text" unless text is wanted).
-2. Run (one image per call):
+2. Ask which model (section below), then run (one image per call):
 
 ```bash
-bash "$HOME/.claude/skills/codex-image/scripts/codex-image.sh" "<prompt>" [optional-file-name]
+bash "$HOME/.claude/skills/codex-image/scripts/codex-image.sh" --model <name> "<prompt>" [optional-file-name]
 ```
 
 3. The script prints the absolute PNG path on success. View it with the Read tool and run the quality control below.
 4. Deliver it where the user asked (copy it into the project; do not leave it only in `~/codex-images`).
 
-## Plan note
+## Ask which model (every time this skill is invoked)
 
-The model is chosen by the script, not by you. On the free plan (`CODEX_PLAN=free` or the connector config) it passes `gpt-6-luna`; image generation itself may not be available on every free plan. If exit code 5 happens on the free plan, tell the user it may be a plan limit rather than a prompt problem.
+1. Check the plan first: `bash "$HOME/.claude/skills/codex-image/scripts/codex-image.sh" --show-plan` prints `free`, `go` or `paid`.
+   - `free` or `go`: only **Luna** exists for this user. **Do not ask.** Use it (the script forces it) and say "using Luna (free/Go plan)" in your report.
+   - `paid`: continue.
+2. If the user already named a model in this request or earlier in the same task, use that and do not ask.
+3. Otherwise ask with **AskUserQuestion** (single choice). Options, in this order, with your recommendation first and "(Recommended)" plus a one-line reason:
+   - **Default**: the user's own Codex default model (nothing is overridden)
+   - **Luna**: the lightest tier (the only one on Free/Go); least quota
+   - **Terra**: middle tier
+   - **Sol**: heavier tier, for hard or high-stakes work
+   - **Astra**: if the question tool only allows 4 options, show Default, Luna, Terra and Sol and say in the question text that the user can type **Astra** under "Other".
+   For images the model only drives the text model that orchestrates the image tool; it is probably not a picture-quality knob (not verified), so recommend **Default** unless the user prefers otherwise.
+   Do not claim exact capabilities or rankings beyond that; heavier tiers use more Codex quota.
+4. Pass the answer as `--model luna|terra|sol|astra|default`. Reuse the same answer for any retry or re-ask in this task; ask again only for a new request.
+5. The script prints `codex-ask`/`codex-image: model=... plan=...` on stderr: **state the model used in your report**. If it says it retried with the default model, say so.
 
 ## Quality control: you are in charge (do this without being asked)
 

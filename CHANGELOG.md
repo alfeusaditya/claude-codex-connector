@@ -2,6 +2,13 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/); versions follow [SemVer](https://semver.org/).
 
+## [1.5.0] - 2026-11-18
+
+### Changed
+- Models are now chosen by name: **Default, Luna, Terra, Sol, Astra** (`--model`). Every skill invocation makes Claude ask which one (recommending by task), unless the plan is Free/Go or a model was already named. `--depth` was removed.
+- Plans: `free`, `go` and `paid`. Free and Go are limited to Luna.
+- `codex-ask.sh plan` and `codex-image.sh --show-plan` print the configured plan.
+
 ## [1.4.0] - 2026-11-18
 
 ### Added

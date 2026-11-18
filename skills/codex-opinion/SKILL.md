@@ -10,10 +10,10 @@ A different model's independent take on a question. Use it to challenge your own
 ## How to use
 
 1. Write the question **neutrally**: the problem, constraints, the options considered, and what "good" means. **Do not include your own preferred answer or conclusion**: that anchors Codex and defeats the point.
-2. Attach only the files that matter (small, non-secret):
+2. Ask which model (section below). Attach only the files that matter (small, non-secret):
 
 ```bash
-bash "$HOME/.claude/skills/codex-opinion/scripts/codex-ask.sh" opinion [--file path]... [--depth quick|normal|deep] "question"
+bash "$HOME/.claude/skills/codex-opinion/scripts/codex-ask.sh" opinion [--file path]... [--model NAME] "question"
 ```
 
 (For a long question, pipe it and pass `-` as the question: `printf '%s' "$Q" | bash .../codex-ask.sh opinion -`.)
@@ -29,20 +29,22 @@ You make the final recommendation, not Codex.
 2. If the answer is vague, generic, misreads the question, or is cut off, **re-ask once automatically** with a clearer, still-neutral question, without waiting to be told. After one re-ask, go on with what you have and say so.
 3. Present: your view, Codex's view, the differences, which points you verified or rejected and why, and **your** recommendation. Never defer to Codex just because it disagrees; never dismiss it without checking.
 
-## Choosing the model (do this per task)
+## Ask which model (every time this skill is invoked)
 
-Add `--depth` to the command. The script maps it to a model and prints `codex-ask: model=... plan=...` on stderr; **mention the model used in your report**.
-
-| Depth | Use when | Default model |
-|---|---|---|
-| `quick` | simple or low-risk question | `gpt-6-luna` |
-| `normal` (default) | typical task; leaves the user's own Codex default model | user's default |
-| `deep` | high-stakes or hard-to-reverse decisions, security-sensitive design, architecture trade-offs, or a re-ask after a vague answer | `gpt-6.2-sol` |
-
-- On the **free plan** (`CODEX_PLAN=free` or the connector config) the script always uses `gpt-6-luna`; do not try to override it, and do not tell the user a deeper model was used. Keep questions focused and diffs small, since Luna is the smaller model.
-- If a chosen model is rejected the script retries once with the user's default; say so if you see that message.
-- Use `deep` sparingly: it costs more quota. Do not escalate just because a result was disappointing; first improve the question.
-- `--model NAME` overrides depth; only use a model the user named.
+1. Check the plan first: `bash "$HOME/.claude/skills/codex-opinion/scripts/codex-ask.sh" plan` prints `free`, `go` or `paid`.
+   - `free` or `go`: only **Luna** exists for this user. **Do not ask.** Use it (the script forces it) and say "using Luna (free/Go plan)" in your report.
+   - `paid`: continue.
+2. If the user already named a model in this request or earlier in the same task, use that and do not ask.
+3. Otherwise ask with **AskUserQuestion** (single choice). Options, in this order, with your recommendation first and "(Recommended)" plus a one-line reason:
+   - **Default**: the user's own Codex default model (nothing is overridden)
+   - **Luna**: the lightest tier (the only one on Free/Go); least quota
+   - **Terra**: middle tier
+   - **Sol**: heavier tier, for hard or high-stakes work
+   - **Astra**: if the question tool only allows 4 options, show Default, Luna, Terra and Sol and say in the question text that the user can type **Astra** under "Other".
+   Recommend by task: Luna for a simple question, Sol (or Astra) for high-stakes, hard-to-reverse or architecture decisions, Default when unsure.
+   Do not claim exact capabilities or rankings beyond that; heavier tiers use more Codex quota.
+4. Pass the answer as `--model luna|terra|sol|astra|default`. Reuse the same answer for any retry or re-ask in this task; ask again only for a new request.
+5. The script prints `codex-ask`/`codex-image: model=... plan=...` on stderr: **state the model used in your report**. If it says it retried with the default model, say so.
 
 ## Exit codes
 

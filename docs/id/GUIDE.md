@@ -86,11 +86,21 @@ Kode keluar `codex-ask.sh`: `0` ok, `2` salah pakai, `3` codex tidak ada, `4` be
 
 ## Model dan paket
 
-Skrip memilih model per tugas: `--depth quick` (`gpt-6-luna`, tugas ringan), `normal` (model bawaan Codex-mu, default), `deep` (`gpt-6.2-sol`, diff besar/berisiko atau keputusan penting), atau `--model NAMA` eksplisit. Nama model adalah slug dari `codex debug models`; yang bisa dipakai bergantung paketmu.
+Setiap kali kamu memanggil skill, Claude **bertanya model mana yang dipakai** (kecuali kamu sudah menyebutnya, atau paketmu Free/Go).
 
-**Paket free** hanya bisa memakai Luna. Atur sekali: `bash install.sh --plan free` (tersimpan di `~/.config/claude-codex-connector/config`) atau `CODEX_PLAN=free`. Pada paket free semua panggilan memakai `gpt-6-luna` apa pun depth-nya. Kembali: `bash install.sh --plan paid`. Pembuatan gambar mungkin tidak tersedia di semua paket free; bila gagal, kode keluar 5.
+| Pilihan | Model Codex | Catatan |
+|---|---|---|
+| **Default** | model bawaan Codex-mu (`model` di `~/.codex/config.toml`) | tidak ada yang diganti |
+| **Luna** | `gpt-6-luna` | tingkat teringan; satu-satunya untuk paket **Free / Go** |
+| **Terra** | `gpt-6.1-terra` | tingkat menengah |
+| **Sol** | `gpt-6.2-sol` | tingkat lebih berat |
+| **Astra** | `gpt-6.2-astra` | jika dialog hanya muat 4 pilihan, ketik "Astra" di "Other" |
 
-Jika model yang dipilih ditolak, skrip mencoba sekali lagi dengan model bawaanmu (hanya paket paid). Setiap run mencetak `model=... plan=... depth=...` di stderr.
+Claude merekomendasikan satu berdasarkan tugas dan melaporkan model yang dipakai. Tingkat lebih berat memakai kuota lebih banyak. Ubah pemetaan dengan `CODEX_MODEL_LUNA/TERRA/SOL/ASTRA`; slug mentah seperti `gpt-6.1-sol` juga bisa lewat `--model`.
+
+**Paket Free dan Go (hanya Luna).** Atur sekali: `bash install.sh --plan free` (atau `--plan go`), tersimpan di `~/.config/claude-codex-connector/config`, atau `CODEX_PLAN=free|go`. Semua panggilan memakai Luna dan Claude tidak bertanya. Kembali: `--plan paid`. Pembuatan gambar mungkin tidak tersedia di semua paket free; bila gagal, kode keluar 5.
+
+Pada paket paid, jika model ditolak atau tidak menjawab, skrip mencoba sekali dengan model bawaanmu dan memberi tahu di stderr.
 
 ## Memakai skrip gambar langsung
 

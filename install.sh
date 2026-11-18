@@ -4,7 +4,7 @@
 #   bash install.sh              install (asks before changing anything outside the skill folder)
 #   bash install.sh --yes        answer yes to every question
 #   bash install.sh --check      change nothing, only report what is ready / missing
-#   bash install.sh --plan free  set your ChatGPT plan (free = Luna model only; default paid)
+#   bash install.sh --plan free|go|paid  set your ChatGPT plan (free/go = Luna model only; default paid)
 #   bash install.sh --uninstall  remove the 3 skills (keeps Codex, your login and your images)
 #
 # Never uses sudo. Never changes Claude/Codex settings files.
@@ -22,7 +22,7 @@ CONF_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/claude-codex-connector"
 while [ $# -gt 0 ]; do
   a=$1; shift
   case $a in
-    --plan) [ $# -ge 1 ] || { echo "--plan needs free or paid" >&2; exit 2; }; PLAN_ARG=$1; shift; case $PLAN_ARG in free|paid) ;; *) echo "--plan must be free or paid" >&2; exit 2;; esac;;
+    --plan) [ $# -ge 1 ] || { echo "--plan needs free, go or paid" >&2; exit 2; }; PLAN_ARG=$1; shift; case $PLAN_ARG in free|go|paid) ;; *) echo "--plan must be free, go or paid" >&2; exit 2;; esac;;
     --yes|-y) YES=1;; --check) CHECK=1;; --uninstall) UNINSTALL=1;;
     -h|--help) sed -n '2,10p' "$0"; exit 0;;
     *) echo "unknown option: $a (see --help)" >&2; exit 2;;
@@ -132,10 +132,10 @@ if [ "$CHECK" = 1 ]; then
 else
   PLAN_NOW=${PLAN_ARG:-$(get_plan)}
   if [ -z "$PLAN_NOW" ]; then
-    if [ "$YES" = 0 ] && [ -t 0 ] && ask "Are you on the ChatGPT FREE plan (Luna model only)?"; then PLAN_NOW=free; else PLAN_NOW=paid; fi
+    if [ "$YES" = 0 ] && [ -t 0 ] && ask "Are you on the ChatGPT Free or Go plan (Luna model only)?"; then PLAN_NOW=free; else PLAN_NOW=paid; fi
   fi
   mkdir -p "$CONF_DIR"; printf 'CODEX_PLAN=%s\n' "$PLAN_NOW" > "$CONF_DIR/config"
-  ok "plan: $PLAN_NOW (saved in $CONF_DIR/config; change with: bash install.sh --plan free|paid)"
+  ok "plan: $PLAN_NOW (saved in $CONF_DIR/config; change with: bash install.sh --plan free|go|paid)"
 fi
 
 echo

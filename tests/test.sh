@@ -64,32 +64,41 @@ FAKE_LOGGED_OUT=1 t "ask: not logged in" 4 bash "$ASK" opinion "x"
 FAKE_NO_IMAGE=1   t "ask: no answer"     5 bash "$ASK" opinion "x"
 # --- models / plans ---
 export XDG_CONFIG_HOME="$T/cfg"
+m() { grep -q -- "$1" "$T/fake.args" || { echo "FAIL expected '$1' in args: $(cat "$T/fake.args")"; fail=1; }; }
 t "model: default has no -m"  0 bash "$ASK" opinion "q"
 grep -q -- " -m " "$T/fake.args" && { echo "FAIL default passed -m"; fail=1; }
-t "model: deep"               0 bash "$ASK" opinion --depth deep "q"
-grep -q -- "-m gpt-6.2-sol" "$T/fake.args" || { echo "FAIL deep model"; fail=1; }
-t "model: quick"              0 bash "$ASK" opinion --depth quick "q"
-grep -q -- "-m gpt-6-luna" "$T/fake.args" || { echo "FAIL quick model"; fail=1; }
-t "model: explicit"           0 bash "$ASK" opinion --model gpt-6.1-terra "q"
-grep -q -- "-m gpt-6.1-terra" "$T/fake.args" || { echo "FAIL explicit model"; fail=1; }
+t "model: explicit default"   0 bash "$ASK" opinion --model Default "q"
+grep -q -- " -m " "$T/fake.args" && { echo "FAIL 'Default' passed -m"; fail=1; }
+t "model: luna"   0 bash "$ASK" opinion --model luna "q";   m "-m gpt-6-luna"
+t "model: Terra (case-insens.)" 0 bash "$ASK" opinion --model Terra "q"; m "-m gpt-6.1-terra"
+t "model: sol"    0 bash "$ASK" opinion --model sol "q";    m "-m gpt-6.2-sol"
+t "model: astra"  0 bash "$ASK" opinion --model astra "q";  m "-m gpt-6.2-astra"
+t "model: raw slug" 0 bash "$ASK" opinion --model gpt-6.1-sol "q"; m "-m gpt-6.1-sol"
+CODEX_MODEL_SOL=gpt-9-sol t "model: env override" 0 bash "$ASK" opinion --model sol "q"; m "-m gpt-9-sol"
 t "model: bad name"           2 bash "$ASK" opinion --model 'x;rm' "q"
-t "model: bad depth"          2 bash "$ASK" opinion --depth max "q"
-CODEX_PLAN=free t "plan free forces luna" 0 bash "$ASK" opinion --depth deep "q"
-grep -q -- "-m gpt-6-luna" "$T/fake.args" && ! grep -q "gpt-6.2" "$T/fake.args" || { echo "FAIL free plan model"; fail=1; }
+for plan in free go; do
+  CODEX_PLAN=$plan t "plan $plan forces luna" 0 bash "$ASK" opinion --model sol "q"; m "-m gpt-6-luna"
+  grep -q "gpt-6.2" "$T/fake.args" && { echo "FAIL $plan used paid model"; fail=1; }
+  CODEX_PLAN=$plan t "plan $plan default->luna" 0 bash "$ASK" opinion "q"; m "-m gpt-6-luna"
+done
 t "plan: invalid"             2 env CODEX_PLAN=gold bash "$ASK" opinion "q"
-FAKE_REJECT_MODEL=1 t "model rejected -> falls back" 0 bash "$ASK" opinion --depth deep "q"
+t "plan: show (ask)"          0 env CODEX_PLAN=go bash "$ASK" plan
+[ "$(CODEX_PLAN=go bash "$ASK" plan)" = go ] || { echo "FAIL plan output"; fail=1; }
+[ "$(bash "$SCRIPT" --show-plan)" = paid ] || { echo "FAIL show-plan default"; fail=1; }
+FAKE_REJECT_MODEL=1 t "model rejected -> falls back" 0 bash "$ASK" opinion --model sol "q"
 grep -q "FAKE ANSWER" "$T/o" || { echo "FAIL fallback answer"; fail=1; }
 FAKE_REJECT_MODEL=1 CODEX_PLAN=free t "free: no fallback" 5 bash "$ASK" opinion "q"
-CODEX_IMAGE_MODEL=gpt-6.2-sol t "image: model passed" 0 bash "$SCRIPT" "x" m1
-grep -q -- "-m gpt-6.2-sol" "$T/fake.args" || { echo "FAIL image model"; fail=1; }
-CODEX_PLAN=free t "image: free plan luna" 0 bash "$SCRIPT" "x" m2
-grep -q -- "-m gpt-6-luna" "$T/fake.args" || { echo "FAIL image free"; fail=1; }
-mkdir -p "$XDG_CONFIG_HOME/claude-codex-connector"; echo "CODEX_PLAN=free" > "$XDG_CONFIG_HOME/claude-codex-connector/config"
-t "config file: free"         0 bash "$ASK" opinion --depth deep "q"
-grep -q -- "-m gpt-6-luna" "$T/fake.args" || { echo "FAIL config free"; fail=1; }
+t "image: --model astra"      0 bash "$SCRIPT" --model astra "x" m1; m "-m gpt-6.2-astra"
+t "image: default no -m"      0 bash "$SCRIPT" "x" m1b
+grep -q -- " -m " "$T/fake.args" && { echo "FAIL image default passed -m"; fail=1; }
+CODEX_PLAN=free t "image: free plan luna" 0 bash "$SCRIPT" --model sol "x" m2; m "-m gpt-6-luna"
+mkdir -p "$XDG_CONFIG_HOME/claude-codex-connector"; echo "CODEX_PLAN=go" > "$XDG_CONFIG_HOME/claude-codex-connector/config"
+t "config file: go"           0 bash "$ASK" opinion --model sol "q"; m "-m gpt-6-luna"
 rm -rf "$XDG_CONFIG_HOME"
 t "installer --plan free"     0 bash "$ROOT/install.sh" --yes --plan free
 grep -q "CODEX_PLAN=free" "$XDG_CONFIG_HOME/claude-codex-connector/config" || { echo "FAIL plan not saved"; fail=1; }
+t "installer --plan go"       0 bash "$ROOT/install.sh" --yes --plan go
+grep -q "CODEX_PLAN=go" "$XDG_CONFIG_HOME/claude-codex-connector/config" || { echo "FAIL go not saved"; fail=1; }
 t "installer bad plan"        2 bash "$ROOT/install.sh" --plan gold
 bash "$ROOT/install.sh" --uninstall >/dev/null; [ ! -e "$XDG_CONFIG_HOME/claude-codex-connector/config" ] || { echo "FAIL config left"; fail=1; }
 unset XDG_CONFIG_HOME
@@ -102,5 +111,5 @@ bash "$ROOT/install.sh" --yes >/dev/null
 # changed skill content -> old copy is backed up OUTSIDE the skills dir
 echo "# local edit" >> "$HOME/.claude/skills/codex-image/SKILL.md"; bash "$ROOT/install.sh" --yes >/dev/null
 [ -z "$(ls "$HOME/.claude/skills" | grep before)" ] && [ -n "$(ls "$HOME/.claude/skill-backups" 2>/dev/null)" ] && echo "PASS backup outside skills dir" || { echo "FAIL backup location"; fail=1; }
-for k in codex-image codex-review codex-opinion; do grep -q "Quality control" "$ROOT/skills/$k/SKILL.md" && echo "PASS QC rule in $k" || { echo "FAIL QC rule missing in $k"; fail=1; }; done
+for k in codex-image codex-review codex-opinion; do grep -q "Quality control" "$ROOT/skills/$k/SKILL.md" && grep -q "Ask which model" "$ROOT/skills/$k/SKILL.md" && echo "PASS QC rule in $k" || { echo "FAIL QC rule missing in $k"; fail=1; }; done
 [ "$fail" = 0 ] && echo "ALL PASSED" || { echo "SOME FAILED"; exit 1; }

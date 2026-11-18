@@ -32,7 +32,7 @@ The banner above was made with `codex-image` and passed Claude's check. The two 
 
 ## Models and plans
 
-Claude picks a depth per task: `quick` (Luna) for small things, `normal` (your own Codex default), `deep` (`gpt-6.2-sol`) for large or risky work. **Free plan** (Luna only): run `bash install.sh --plan free` once and every call uses Luna. Details in [docs/GUIDE.md](docs/GUIDE.md#models-and-plans).
+Each time you use a skill, Claude **asks which model**: Default (your own Codex setting), Luna, Terra, Sol or Astra, with a recommendation for the task. **Free / Go plans** can only use Luna: run `bash install.sh --plan free` (or `go`) once and Claude stops asking and always uses Luna. Details in [docs/GUIDE.md](docs/GUIDE.md#models-and-plans).
 
 ## Requirements
 
@@ -63,7 +63,7 @@ Then **start a new Claude Code session** and try:
 > "Ask Codex to review my uncommitted changes"
 > "Get a second opinion from Codex on this approach: ..."
 
-Installer options: `--yes` (answer yes to everything), `--check` (report only, change nothing), `--plan free|paid`, `--uninstall`.
+Installer options: `--yes` (answer yes to everything), `--check` (report only, change nothing), `--plan free|go|paid`, `--uninstall`.
 
 ## Documentation
 

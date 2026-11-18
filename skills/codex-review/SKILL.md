@@ -10,10 +10,10 @@ A second, independent reviewer (a different model family) for the changes in a g
 ## How to use
 
 1. Confirm what to review: uncommitted changes (default) or a branch vs a base (`--base main`). New, never-added files are invisible to git diff: run `git add -N <file>` first (this only marks intent; tell the user).
-2. Run from the repository (or pass `-C <dir>`):
+2. Ask which model (section below), then run from the repository (or pass `-C <dir>`):
 
 ```bash
-bash "$HOME/.claude/skills/codex-review/scripts/codex-ask.sh" review [-C DIR] [--base REF] [--depth quick|normal|deep] "optional focus, e.g. concurrency and error handling"
+bash "$HOME/.claude/skills/codex-review/scripts/codex-ask.sh" review [-C DIR] [--base REF] [--model NAME] "optional focus, e.g. concurrency and error handling"
 ```
 
 3. The review text is printed to stdout. **Do your own review of the same diff too**, then present both: where they agree, where they differ, and which findings you verified against the code. Never paste Codex's output as truth.
@@ -28,20 +28,22 @@ You, not Codex, own the review. Treat Codex as a second reviewer whose claims mu
 3. If Codex's answer is vague, generic, ignores the diff, cut off, or contradicts the code, **re-ask once automatically** with a sharper focus (name the files/risks), without waiting to be told. After one re-ask, go on with what you have and say so.
 4. Your final report is yours: findings you verified, where you and Codex agree or differ, what you would fix first. Never relay Codex's text unchecked.
 
-## Choosing the model (do this per task)
+## Ask which model (every time this skill is invoked)
 
-Add `--depth` to the command. The script maps it to a model and prints `codex-ask: model=... plan=...` on stderr; **mention the model used in your report**.
-
-| Depth | Use when | Default model |
-|---|---|---|
-| `quick` | small diff (roughly under 50 changed lines), simple or low-risk question | `gpt-6-luna` |
-| `normal` (default) | typical task; leaves the user's own Codex default model | user's default |
-| `deep` | large or risky diff, security/auth/payment/concurrency code, architecture decisions, or a re-ask after a vague answer | `gpt-6.2-sol` |
-
-- On the **free plan** (`CODEX_PLAN=free` or the connector config) the script always uses `gpt-6-luna`; do not try to override it, and do not tell the user a deeper model was used. Keep questions focused and diffs small, since Luna is the smaller model.
-- If a chosen model is rejected the script retries once with the user's default; say so if you see that message.
-- Use `deep` sparingly: it costs more quota. Do not escalate just because a result was disappointing; first improve the question.
-- `--model NAME` overrides depth; only use a model the user named.
+1. Check the plan first: `bash "$HOME/.claude/skills/codex-review/scripts/codex-ask.sh" plan` prints `free`, `go` or `paid`.
+   - `free` or `go`: only **Luna** exists for this user. **Do not ask.** Use it (the script forces it) and say "using Luna (free/Go plan)" in your report.
+   - `paid`: continue.
+2. If the user already named a model in this request or earlier in the same task, use that and do not ask.
+3. Otherwise ask with **AskUserQuestion** (single choice). Options, in this order, with your recommendation first and "(Recommended)" plus a one-line reason:
+   - **Default**: the user's own Codex default model (nothing is overridden)
+   - **Luna**: the lightest tier (the only one on Free/Go); least quota
+   - **Terra**: middle tier
+   - **Sol**: heavier tier, for hard or high-stakes work
+   - **Astra**: if the question tool only allows 4 options, show Default, Luna, Terra and Sol and say in the question text that the user can type **Astra** under "Other".
+   Recommend by task: Luna for a small diff or low-risk question, Sol (or Astra) for a large/risky diff or security/payment/concurrency code, Default when unsure.
+   Do not claim exact capabilities or rankings beyond that; heavier tiers use more Codex quota.
+4. Pass the answer as `--model luna|terra|sol|astra|default`. Reuse the same answer for any retry or re-ask in this task; ask again only for a new request.
+5. The script prints `codex-ask`/`codex-image: model=... plan=...` on stderr: **state the model used in your report**. If it says it retried with the default model, say so.
 
 ## Exit codes
 
