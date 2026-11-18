@@ -19,6 +19,15 @@ bash "$HOME/.claude/skills/codex-review/scripts/codex-ask.sh" review [-C DIR] [-
 3. The review text is printed to stdout. **Do your own review of the same diff too**, then present both: where they agree, where they differ, and which findings you verified against the code. Never paste Codex's output as truth.
 4. Verify each Codex finding in the actual code before telling the user to act on it, or before fixing. Report false positives as such.
 
+## Quality control: you are in charge (do this without being asked)
+
+You, not Codex, own the review. Treat Codex as a second reviewer whose claims must be checked.
+
+1. Review the same diff yourself first or in parallel; form your own view.
+2. Check **every** Codex finding against the actual code and label it: **confirmed**, **false positive** (say why), or **unverified** (say what is missing). Report only confirmed ones as issues; list the others separately and briefly.
+3. If Codex's answer is vague, generic, ignores the diff, cut off, or contradicts the code, **re-ask once automatically** with a sharper focus (name the files/risks), without waiting to be told. After one re-ask, go on with what you have and say so.
+4. Your final report is yours: findings you verified, where you and Codex agree or differ, what you would fix first. Never relay Codex's text unchecked.
+
 ## Exit codes
 
 | Code | Meaning | Do this |

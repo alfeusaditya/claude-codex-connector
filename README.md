@@ -1,5 +1,7 @@
 # Claude-Codex Connector
 
+<p align="center"><img src="docs/assets/banner.png" alt="Claude and Codex connected by a cable carrying image, code review and chat icons" width="100%"></p>
+
 Hubungkan **Claude Code** ke **Codex (OpenAI)** lewat langganan ChatGPT kamu: **buat gambar**, **review kode**, dan **minta opini kedua/ketiga**. Tanpa API key, tanpa server tambahan, tanpa mengubah file settings Claude atau Codex.
 
 > English summary: [README.en.md](README.en.md)
@@ -19,6 +21,15 @@ Kamu ──> Claude Code ──(skill)──> codex exec (sandbox) ──> jawab
 Claude tidak menelan mentah jawaban Codex: skill menyuruhnya memverifikasi temuan, membandingkan dengan pendapatnya sendiri, dan memperlakukan output Codex sebagai saran yang tidak tepercaya.
 
 Tidak berafiliasi dengan Anthropic atau OpenAI. Lisensi MIT.
+
+## Prinsip: Claude yang memegang kendali
+
+Codex adalah alat, bukan pengambil keputusan. Setiap skill mewajibkan Claude, **tanpa disuruh**, untuk:
+- **codex-image**: memeriksa gambar (teks persis, gaya, komposisi, artefak) dan merevisi prompt sendiri sampai 2 kali jika kurang pas, lalu melaporkan apa yang diperbaiki.
+- **codex-review**: me-review sendiri, memberi label tiap temuan Codex (terkonfirmasi / false positive / belum terverifikasi), dan bertanya ulang sekali jika jawabannya kabur.
+- **codex-opinion**: menilai jawaban Codex, memverifikasi klaimnya, bertanya ulang sekali jika kabur, lalu memberi rekomendasi **Claude sendiri**.
+
+Gambar di atas dibuat lewat skill `codex-image` dan lolos pemeriksaan Claude; kedua karakter adalah ilustrasi orisinal, bukan logo resmi Anthropic atau OpenAI.
 
 ## Prasyarat
 

@@ -12,6 +12,7 @@ set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 SKILLS="codex-image codex-review codex-opinion"
 SKILLS_DIR="$HOME/.claude/skills"
+BACKUP_DIR="$HOME/.claude/skill-backups"
 OUT_DIR=${CODEX_IMAGE_DIR:-$HOME/codex-images}
 NPM_PREFIX="$HOME/.npm-global"
 
@@ -108,7 +109,8 @@ else
     stage=$(mktemp -d); cp -R "$src/." "$stage/"
     case $s in codex-review|codex-opinion) mkdir -p "$stage/scripts"; cp "$HERE/shared/codex-ask.sh" "$stage/scripts/";; esac
     if [ -e "$dst" ] && ! diff -rq "$stage" "$dst" >/dev/null 2>&1; then
-      mv "$dst" "$dst.before-$(date +%Y%m%d%H%M%S)"; info "existing $s moved aside (backup kept in $SKILLS_DIR)"
+      # backups live OUTSIDE the skills folder, or Claude would load them as duplicate skills
+      mkdir -p "$BACKUP_DIR"; mv "$dst" "$BACKUP_DIR/$s.$(date +%Y%m%d%H%M%S)"; info "existing $s backed up to $BACKUP_DIR"
     fi
     rm -rf "$dst"; cp -R "$stage" "$dst"; rm -rf "$stage"
     [ -d "$dst/scripts" ] && chmod +x "$dst"/scripts/*.sh

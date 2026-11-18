@@ -67,4 +67,8 @@ for k in codex-image codex-review codex-opinion; do [ ! -e "$HOME/.claude/skills
 bash "$ROOT/install.sh" --yes >/dev/null
 [ -x "$HOME/.claude/skills/codex-review/scripts/codex-ask.sh" ] && [ -x "$HOME/.claude/skills/codex-opinion/scripts/codex-ask.sh" ] && [ -x "$HOME/.claude/skills/codex-image/scripts/codex-image.sh" ] && echo "PASS skills self-contained" || { echo "FAIL skill scripts missing"; fail=1; }
 
+# changed skill content -> old copy is backed up OUTSIDE the skills dir
+echo "# local edit" >> "$HOME/.claude/skills/codex-image/SKILL.md"; bash "$ROOT/install.sh" --yes >/dev/null
+[ -z "$(ls "$HOME/.claude/skills" | grep before)" ] && [ -n "$(ls "$HOME/.claude/skill-backups" 2>/dev/null)" ] && echo "PASS backup outside skills dir" || { echo "FAIL backup location"; fail=1; }
+for k in codex-image codex-review codex-opinion; do grep -q "Quality control" "$ROOT/skills/$k/SKILL.md" && echo "PASS QC rule in $k" || { echo "FAIL QC rule missing in $k"; fail=1; }; done
 [ "$fail" = 0 ] && echo "ALL PASSED" || { echo "SOME FAILED"; exit 1; }

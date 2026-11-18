@@ -2,6 +2,10 @@
 
 Tiga skill: `codex-image` (gambar), `codex-review` (review diff), `codex-opinion` (opini independen). Bagian "Cara kerja" di bawah menjelaskan gambar; review dan opini dijelaskan setelahnya.
 
+## Prinsip: Claude memegang kendali
+
+Claude melakukan quality control atas semua hasil Codex dan memutuskan sendiri. Untuk gambar ia merevisi prompt dan mengulang otomatis (maks 2 revisi per gambar, memakai kuota tambahan); untuk review dan opini ia memverifikasi klaim Codex dan bertanya ulang sekali bila jawabannya kabur. Aturan lengkap ada di `SKILL.md` tiap skill, bagian "Quality control".
+
 ## Cara kerja
 
 1. Kamu meminta gambar di Claude Code.

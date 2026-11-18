@@ -2,6 +2,12 @@
 
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/); versi mengikuti [SemVer](https://semver.org/).
 
+## [1.2.0] - 2026-11-18
+
+### Added
+- Aturan "Quality control: Claude in charge" di ketiga skill: revisi otomatis gambar (maks 2x), pelabelan temuan review, tanya ulang sekali bila jawaban Codex kabur.
+- Banner repo (`docs/assets/banner.png`), dibuat dengan `codex-image`.
+
 ## [1.1.0] - 2026-11-18
 
 ### Added

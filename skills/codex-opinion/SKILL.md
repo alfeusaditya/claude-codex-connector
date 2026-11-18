@@ -21,6 +21,14 @@ bash "$HOME/.claude/skills/codex-opinion/scripts/codex-ask.sh" opinion [--file p
 3. Codex's answer is printed to stdout. Then give the user a short comparison: **your view, Codex's view, where they differ, and your final recommendation with reasons**. If Codex raises something you had not considered, check it; if it is wrong, say why.
 4. If the user asked for a "third" opinion (two views already exist), include both earlier views in the question as "Option A / Option B", neutrally labelled, and ask Codex to judge them.
 
+## Quality control: you are in charge (do this without being asked)
+
+You make the final recommendation, not Codex.
+
+1. Judge Codex's answer: does it address the actual question, use the real constraints, and give reasons you can check? Verify factual claims (APIs, versions, behavior) against the code or docs before relying on them.
+2. If the answer is vague, generic, misreads the question, or is cut off, **re-ask once automatically** with a clearer, still-neutral question, without waiting to be told. After one re-ask, go on with what you have and say so.
+3. Present: your view, Codex's view, the differences, which points you verified or rejected and why, and **your** recommendation. Never defer to Codex just because it disagrees; never dismiss it without checking.
+
 ## Exit codes
 
 | Code | Meaning | Do this |

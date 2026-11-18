@@ -38,7 +38,7 @@ Memakai langganan lewat CLI secara otomatis mungkin diatur oleh ketentuan OpenAI
 Dilakukan (setelah bertanya, kecuali `--yes`):
 - `npm i -g @openai/codex`
 - jika folder global npm tidak bisa ditulis: `npm config set prefix ~/.npm-global` dan menambah satu baris `PATH` ke `~/.zshrc`/`~/.bashrc` (backup `*.before-claude-codex-image`)
-- menyalin tiga skill (`codex-image`, `codex-review`, `codex-opinion`) ke `~/.claude/skills/`, membuat `~/codex-images`
+- menyalin tiga skill ke `~/.claude/skills/` (versi lama dicadangkan di `~/.claude/skill-backups/`), membuat `~/codex-images`
 
 Tidak dilakukan: `sudo`, mengubah `~/.claude/settings.json`, `~/.codex/*`, menambah hook atau MCP server, mengirim data ke mana pun.
 
