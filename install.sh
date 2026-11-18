@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# install.sh — set up Claude Code -> Codex image generation (macOS / Linux).
+#
+#   bash install.sh              install (asks before changing anything outside the skill folder)
+#   bash install.sh --yes        answer yes to every question
+#   bash install.sh --check      change nothing, only report what is ready / missing
+#   bash install.sh --uninstall  remove the skill (keeps Codex, your login and your images)
+#
+# Never uses sudo. Never changes Claude/Codex settings files.
+set -euo pipefail
+
+HERE=$(cd "$(dirname "$0")" && pwd)
+SKILL_SRC="$HERE/skills/codex-image"
+SKILL_DST="$HOME/.claude/skills/codex-image"
+OUT_DIR=${CODEX_IMAGE_DIR:-$HOME/codex-images}
+NPM_PREFIX="$HOME/.npm-global"
+
+YES=0 CHECK=0 UNINSTALL=0
+for a in "$@"; do
+  case $a in
+    --yes|-y) YES=1;; --check) CHECK=1;; --uninstall) UNINSTALL=1;;
+    -h|--help) sed -n '2,9p' "$0"; exit 0;;
+    *) echo "unknown option: $a (see --help)" >&2; exit 2;;
+  esac
+done
+
+ok()   { printf '  [ok]   %s\n' "$*"; }
+miss() { printf '  [FAIL] %s\n' "$*"; }
+info() { printf '  ...    %s\n' "$*"; }
+ask() { # ask "question" -> 0 if yes
+  [ "$YES" = 1 ] && return 0
+  [ -t 0 ] || return 1
+  read -r -p "  ?      $1 [y/N] " r; case $r in y|Y|yes) return 0;; *) return 1;; esac
+}
+
+# ---- uninstall -------------------------------------------------------------
+if [ "$UNINSTALL" = 1 ]; then
+  if [ -d "$SKILL_DST" ]; then rm -rf "$SKILL_DST"; ok "removed $SKILL_DST"; else info "skill not installed"; fi
+  info "kept: Codex CLI, your Codex login, $OUT_DIR"
+  info "full removal: see docs/UNINSTALL.md"
+  exit 0
+fi
+
+PROBLEMS=0
+echo "Claude Code -> Codex image generation"
+
+# ---- 1. Node ---------------------------------------------------------------
+if command -v node >/dev/null 2>&1 && [ "$(node -p 'process.versions.node.split(".")[0]')" -ge 18 ]; then
+  ok "Node.js $(node --version)"
+else
+  miss "Node.js 18+ not found. Install from https://nodejs.org then run this again."; PROBLEMS=1
+fi
+
+# ---- 2. Codex CLI ----------------------------------------------------------
+find_codex() { command -v codex 2>/dev/null || { [ -x "$NPM_PREFIX/bin/codex" ] && echo "$NPM_PREFIX/bin/codex"; } || true; }
+CODEX=$(find_codex)
+
+if [ -z "$CODEX" ] && [ "$CHECK" = 0 ] && [ "$PROBLEMS" = 0 ]; then
+  info "Codex CLI not installed."
+  if ask "Install @openai/codex with npm?"; then
+    # Global npm dir not writable (the EACCES error)? Use a user-level prefix instead of sudo.
+    NPM_ROOT=$(npm root -g 2>/dev/null || echo /usr/local/lib/node_modules)
+    if [ ! -w "$NPM_ROOT" ] && [ ! -w "$(dirname "$NPM_ROOT")" ]; then
+      info "npm global folder ($NPM_ROOT) is not writable by you."
+      if ask "Use $NPM_PREFIX instead (sets npm prefix, adds it to your shell PATH)?"; then
+        mkdir -p "$NPM_PREFIX"; npm config set prefix "$NPM_PREFIX"
+        RC="$HOME/.zshrc"; case ${SHELL:-} in */bash) RC="$HOME/.bashrc";; esac
+        grep -qs '\.npm-global/bin' "$RC" 2>/dev/null || {
+          cp "$RC" "$RC.before-claude-codex-image" 2>/dev/null || true
+          echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$RC"
+          ok "added PATH line to $RC (backup: $RC.before-claude-codex-image)"; }
+        export PATH="$NPM_PREFIX/bin:$PATH"
+      else
+        miss "cannot install without a writable npm folder. See docs/TROUBLESHOOTING.md"; PROBLEMS=1
+      fi
+    fi
+    [ "$PROBLEMS" = 0 ] && { npm install -g @openai/codex && CODEX=$(find_codex); }
+  fi
+fi
+if [ -n "$CODEX" ]; then ok "Codex CLI $("$CODEX" --version 2>/dev/null | head -1) ($CODEX)"
+else miss "Codex CLI missing (npm i -g @openai/codex)"; PROBLEMS=1; fi
+
+# ---- 3. Codex login --------------------------------------------------------
+if [ -n "$CODEX" ]; then
+  if "$CODEX" login status >/dev/null 2>&1; then
+    ok "Codex login: $("$CODEX" login status 2>&1 | head -1)"
+  else
+    miss "Codex not logged in (needs a browser sign-in with your ChatGPT account)"
+    if [ "$CHECK" = 0 ] && [ -t 0 ] && ask "Run 'codex login' now?"; then
+      "$CODEX" login && ok "logged in" || { miss "login failed"; PROBLEMS=1; }
+    else PROBLEMS=1; info "run it yourself: codex login"; fi
+  fi
+fi
+
+# ---- 4. Skill + output folder ---------------------------------------------
+if [ "$CHECK" = 1 ]; then
+  [ -f "$SKILL_DST/SKILL.md" ] && ok "skill installed at $SKILL_DST" || { miss "skill not installed"; PROBLEMS=1; }
+  [ -d "$OUT_DIR" ] && ok "output folder $OUT_DIR" || info "output folder will be created on first use"
+else
+  mkdir -p "$HOME/.claude/skills" "$OUT_DIR"
+  if [ -e "$SKILL_DST" ] && ! diff -rq "$SKILL_SRC" "$SKILL_DST" >/dev/null 2>&1; then
+    mv "$SKILL_DST" "$SKILL_DST.before-$(date +%Y%m%d%H%M%S)"; info "existing skill moved aside (backup kept)"
+  fi
+  rm -rf "$SKILL_DST"; cp -R "$SKILL_SRC" "$SKILL_DST"; chmod +x "$SKILL_DST/scripts/codex-image.sh"
+  ok "skill installed at $SKILL_DST"
+  ok "output folder $OUT_DIR"
+fi
+
+echo
+if [ "$PROBLEMS" = 0 ]; then
+  echo "Ready. Restart Claude Code (or start a new session), then ask: \"generate an image of a red apple\"."
+  echo "Read docs/SECURITY.md before sharing prompts or files."
+else
+  echo "Not ready yet: fix the [FAIL] lines above, then run this again."; exit 1
+fi
